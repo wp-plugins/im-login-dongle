@@ -4,7 +4,7 @@ Donate link: http://wpplugz.is-leet.com/
 Tags: login dongle, login security, two step verification, two step login, im login, two step im login, instant messenger login, google talk login, extra security, pin login, code login, dongle, security
 Requires at least: 3.0
 Tested up to: 3.4.1
-Stable tag: 0.11
+Stable tag: 0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
