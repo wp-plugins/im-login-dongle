@@ -44,21 +44,6 @@
 			if($plugin_options['version'] == "0.1") {
 				$plugin_options['version'] = "0.3";
 				$plugin_options['session_time'] = 60;
-				$plugin_options['im_bots']['icq'] = array(
-					'im_bot_username' => '',
-					'im_bot_domain' => '',
-					'activated' => false,
-					'im_bot_password' => ''
-				); 	
-				update_option('im_login_dongle_settings', $plugin_options);
-			}
-			else if($plugin_options['version'] == "0.3") {
-				$plugin_options['im_bots']['icq'] = array(
-					'im_bot_username' => '',
-					'im_bot_domain' => '',
-					'activated' => false,
-					'im_bot_password' => ''
-				); 	
 				update_option('im_login_dongle_settings', $plugin_options);
 			}
 		}
@@ -213,7 +198,6 @@
 			$message = "WP Login code \n\n".$code."\n \n"."This code is valid for the next 30 seconds.".$plugin_options['custom_im_msg']."\n\n".
 				base64_decode("LjogUG93ZXJlZCBieSBJTSBMb2dpbiBEb25nbGUgOi4=", true);
 			
-			sleep(5);
 			$icq = new WebIcqLite();
 			$icq_pass = decrypt($plugin_options['im_bots']['icq']['im_bot_password'], $plugin_options['encryption_salt']);
 			$icq->connect($plugin_options['im_bots']['icq']['im_bot_username'], $icq_pass);
@@ -221,7 +205,6 @@
 			if(!$send_msg) {
 				$connection_success = false;
 			}
-			$icq->close();
 			$icq->disconnect();
 			
 		}
@@ -724,7 +707,7 @@
 						<td>
 							<p>This plugin was created by <a href="http://wpplugz.is-leet.com">wpPlugz</a>.</p>
 			                <p>Please leave the "Powered by" message in the IMs intact. If you change it anyway, than please consider a donation.</p>
-			                <p>This plugin uses the <a href="http://code.google.com/p/xmpphp/">XMPPHP</a> library and the following icon sets: <a href="http://www.smashingmagazine.com/2008/08/27/on-stage-a-free-icon-set">On Stage</a>, <a href="http://www.iconspedia.com/pack/simply-google-1-37/">Simply Google</a>.</p>
+			                <p>This plugin uses the <a href="http://code.google.com/p/xmpphp/">XMPPHP</a> library and the following icon sets: <a href="http://www.smashingmagazine.com/2008/08/27/on-stage-a-free-icon-set">On Stage</a>, <a href="http://www.iconspedia.com/pack/simply-google-1-37/">Simply Google</a> and the ICQ icon by <a href="http://www.iconfinder.com/icondetails/1413/128/flower_icq_icon">David Vignoni</a>.</p>
 			                <p>Any bugs, request and reports can be sent on the official plugin page on Wordpress.</p>						
                     	</td>
 					</tr>		

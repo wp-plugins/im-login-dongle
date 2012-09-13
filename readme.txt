@@ -60,8 +60,12 @@ None at the moment.
 7. When plugin is activated, login procedure #1
 8. When plugin is activated, login procedure #2
 9. The disable screen for IM Login Dongle if IM servers are down
+10. Plugin settings page #6, ICQ bot settings
 
 == Changelog ==
+
+= 0.5 =
+* Added ICQ support (currently in beta).
 
 = 0.3 =
 * Added disable codes for all users
