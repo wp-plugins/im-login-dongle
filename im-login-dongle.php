@@ -121,8 +121,14 @@
 				$im_id = $user_dongle_settings['im_login_dongle_id']; // Get the IM of the current user
 				$send_msg = send_dongle_message($current_user->ID, $im_id, $dongle_code, $user_dongle_settings['im_login_dongle_type']); // Send the dongle code to the user
 				if(!$send_msg) {
-					$redirect_url = plugin_dir_url(__FILE__).'disable.php?error';
-					wp_redirect($redirect_url, 301);
+					if(is_admin()) {
+						$redirect_url = plugin_dir_url(__FILE__).'shutdown.php?error';
+						wp_redirect($redirect_url, 301);						
+					}
+					else {
+						$redirect_url = plugin_dir_url(__FILE__).'disable.php?error';
+						wp_redirect($redirect_url, 301);						
+					}
 				}
 				else {
 					$dongle_id_encrypted = encrypt($dongle_id, $plugin_options['encryption_salt']);
@@ -166,7 +172,7 @@
 			require_once 'XMPPHP/XMPP.php';
 			
 			$message = "WP Login code \n\n".$code."\n \n"."This code was requested from ".$ip." and is valid for the next 30 seconds.".$plugin_options['custom_im_msg']."\n\n".
-					base64_decode("LjogUG93ZXJlZCBieSBJTSBMb2dpbiBEb25nbGUuIChodHRwOi8vd3BwbHVnei5pcy1sZWV0LmNvbSkgOi4=", true);
+					".: Powered by IM Login Dongle :.";
 
 			
 			$conn = new XMPPHP_XMPP('talk.google.com', 
@@ -195,8 +201,7 @@
 		
 			require_once 'ICQ/WebIcqLite.class.php';
 			
-			$message = "WP Login code \n\n".$code."\n \n"."This code is valid for the next 30 seconds.".$plugin_options['custom_im_msg']."\n\n".
-				base64_decode("LjogUG93ZXJlZCBieSBJTSBMb2dpbiBEb25nbGUgOi4=", true);
+			$message = "WP Login code \n\n".$code."\n \n"."This code is valid for the next 30 seconds.".$plugin_options['custom_im_msg']."\n\n".".: Powered by IM Login Dongle :.";
 			
 			$icq = new WebIcqLite();
 			$icq_pass = decrypt($plugin_options['im_bots']['icq']['im_bot_password'], $plugin_options['encryption_salt']);
