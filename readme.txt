@@ -4,7 +4,7 @@ Donate link: http://wpplugz.is-leet.com/
 Tags: login dongle, login security, two step verification, two step login, im login, two step im login, instant messenger login, google talk login, extra security, pin login, code login, dongle, security
 Requires at least: 3.0
 Tested up to: 3.4.1
-Stable tag: 0.1
+Stable tag: 0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,7 @@ What this plugin offers:
 *   Reset feature if IM servers are down
 *   Customize PIN length
 *   Add a custom message to the IM
+*   Customize session time validity
 
 == Installation ==
 
@@ -50,13 +51,26 @@ None at the moment.
 
 == Screenshots ==
 
-1. Plugin settings page
-2. User profile settings page (here each user can enable or disable the two step authentication themselves)
-3. When plugin is activated, login procedure #1
-4. When plugin is activated, login procedure #2
-5. The disable screen for IM Login Dongle if IM servers are down
+1. Plugin settings page #1, about
+2. Plugin settings page #2, general settings
+3. Plugin settings page #3, google bot settings
+4. Plugin settings page #4, reset keys
+5. Plugin settings page #5, data management
+6. User profile settings page (here each user can enable or disable the two step authentication themselves)
+7. When plugin is activated, login procedure #1
+8. When plugin is activated, login procedure #2
+9. The disable screen for IM Login Dongle if IM servers are down
 
 == Changelog ==
+
+= 0.3 =
+* Added disable codes for all users
+* Fixed some little bugs
+* Added option to clean all user data from database
+* Added session cleaner
+* Better menus for plugin administration, now separated from settings tab
+* Added option for session time expiration (previously it was 60 minutes), now it is configurable
+* Replaced some deprecated functions.
 
 = 0.1 =
 * The initial version of the plugin.
@@ -73,8 +87,6 @@ Visit the [homepage](http://wpplugz.is-leet.com "homepage of im login dongle") o
 
 In the future all or some of these features might be added:
 
-* Facebook IM support
-* Windows Live Messenger support
-* AIM support
+* Other IM clients
 * Logs of logins
 * Sending IM login notifications to your bot account

@@ -23,7 +23,7 @@
 					$cur_data['authenticated'] = true;
 					$cur_data['dongle_used'] = true;
 					$dongle_data[$decrypted_id] = $cur_data;
-					update_usermeta($current_user->ID, 'im_login_dongle_data', $dongle_data);
+					update_user_meta($current_user->ID, 'im_login_dongle_data', $dongle_data);
 					wp_redirect(get_admin_url(), 301);				
 				}
 				else {
@@ -61,12 +61,16 @@
 <?php 		if(current_user_can('manage_options')) {
 	
 ?>				
-
-			<br /><br /><label for='shutdown'><a href='<?php echo plugin_dir_url(__FILE__).'shutdown.php'; ?>'>Disable IM login?</a></label>
+			<br /><br /><label for='shutdown'><a href='<?php echo plugin_dir_url(__FILE__).'disable.php'; ?>'>Disable IM login?</a></label>
+			<br /><br /><label for='shutdown'><a href='<?php echo plugin_dir_url(__FILE__).'shutdown.php'; ?>'>Disable IM login for all users?</a></label>
 
 <?php			
 			}
-			
+			else {
+?>
+			<br /><br /><label for='shutdown'><a href='<?php echo plugin_dir_url(__FILE__).'disable.php'; ?>'>Disable IM login?</a></label>
+<?php
+			}		
 ?>
 			<br /><br />
 			</form><br />

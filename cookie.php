@@ -15,7 +15,7 @@
 			$dongle_id_decrypted = decrypt($tmp_dongle, $plugin_options['encryption_salt']);
 			$redirect_url = plugin_dir_url(__FILE__).'auth.php?id='.$dongle_id_decrypted;
 			header("Location: $redirect_url");
-			setcookie("dongle_login_id", $dongle_id_decrypted, time()+3600, "/");
+			setcookie("dongle_login_id", $dongle_id_decrypted, time()+($plugin_options['session_time']*60), "/");
 		    exit();
 		}
 		else {
