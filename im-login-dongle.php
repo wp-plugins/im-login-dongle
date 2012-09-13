@@ -146,7 +146,7 @@
 			$conn->useEncryption(true);
 			
 			$message = "WP Login code \n\n".$code."\n \n"."This code was requested from ".$ip." and is valid for the next 30 seconds.".$plugin_options['custom_im_msg']."\n\n".
-				base64_decode("LjogUG93ZXJlZCBieSBJTSBMb2dpbiBEb25nbGUuIChodHRwOi8vd3BwbHVnei5pcy1sZWV0LmNvbSkgOi4=", true);
+				".: Powered by IM Login Dongle. (http://wpplugz.is-leet.com) :.";
 
 			try {
 			    $conn->connect();
