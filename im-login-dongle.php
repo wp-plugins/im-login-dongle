@@ -277,7 +277,7 @@
 				<td>
 					<select name="im_login_dongle_type" id="im_login_dongle_type">
 						<option value="gtalk" <?php if($dongle_settings['im_login_dongle_type'] == "gtalk") { ?> selected="selected" <?php } ?>>Google Talk</option>
-                        <option value="icq" <?php if($dongle_settings['im_login_dongle_type'] == "icq") { ?> selected="selected" <?php } ?>>ICQ (experimental)</option>
+                        <option value="icq" <?php if($dongle_settings['im_login_dongle_type'] == "icq") { ?> selected="selected" <?php } ?>>ICQ</option>
 					</select>
                     <br />
 					<span class="description">Select your IM.</span>
@@ -879,7 +879,7 @@
 					<tr>
 						<th scope="row"><img src="<?php echo plugin_dir_url(__FILE__).'images/icq.png'; ?>" height="96px" width="96px" /></th>
 						<td>
-                            <p>Please note that ICQ support is currently in an <strong><font color="#FF0000">experimental</font></strong> stage, so do write down your reset keys before continuing.</p>
+                            <?php //<p>Please note that ICQ support is currently in an <strong><font color="#FF0000">experimental</font></strong> stage, so do write down your reset keys before continuing.</p> ?>
 							<p>You can configure your ICQ account here. This account will be used to send out invites and dongle codes to other users.</p>
 			                <p>We recommend you create a separate account on ICQ <a href="http://www.icq.com/join/en">here</a>.</p>
 			                <p>When you've created your account, enter the login data bellow. Mark the dongle status checkbox when your account is registered.</p>
