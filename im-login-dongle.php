@@ -4,7 +4,7 @@
 		Plugin Name: IM Login Dongle
 		Plugin URI: http://wpplugz.is-leet.com
 		Description: A simple wordpress plugin that adds two way authentication via selected instant messenger.
-		Version: 0.3
+		Version: 0.5
 		Author: Bostjan Cigan
 		Author URI: http://bostjan.gets-it.net
 		License: GPL v2
@@ -44,6 +44,21 @@
 			if($plugin_options['version'] == "0.1") {
 				$plugin_options['version'] = "0.3";
 				$plugin_options['session_time'] = 60;
+				$plugin_options['im_bots']['icq'] = array(
+					'im_bot_username' => '',
+					'im_bot_domain' => '',
+					'activated' => false,
+					'im_bot_password' => ''
+				); 	
+				update_option('im_login_dongle_settings', $plugin_options);
+			}
+			else if($plugin_options['version'] == "0.3") {
+				$plugin_options['im_bots']['icq'] = array(
+					'im_bot_username' => '',
+					'im_bot_domain' => '',
+					'activated' => false,
+					'im_bot_password' => ''
+				); 	
 				update_option('im_login_dongle_settings', $plugin_options);
 			}
 		}
