@@ -277,7 +277,7 @@
 				<td>
 					<select name="im_login_dongle_type" id="im_login_dongle_type">
 						<option value="gtalk" <?php if($dongle_settings['im_login_dongle_type'] == "gtalk") { ?> selected="selected" <?php } ?>>Google Talk</option>
-                        <option value="icq" <?php if($dongle_settings['im_login_dongle_type'] == "icq") { ?> selected="selected" <?php } ?>>ICQ</option>
+                        <option value="icq" <?php if($dongle_settings['im_login_dongle_type'] == "icq") { ?> selected="selected" <?php } ?>>ICQ (experimental)</option>
 					</select>
                     <br />
 					<span class="description">Select your IM.</span>
@@ -707,7 +707,17 @@
 						<td>
 							<p>This plugin was created by <a href="http://wpplugz.is-leet.com">wpPlugz</a>.</p>
 			                <p>Please leave the "Powered by" message in the IMs intact. If you change it anyway, than please consider a donation.</p>
-			                <p>This plugin uses the <a href="http://code.google.com/p/xmpphp/">XMPPHP</a> library and the following icon sets: <a href="http://www.smashingmagazine.com/2008/08/27/on-stage-a-free-icon-set">On Stage</a>, <a href="http://www.iconspedia.com/pack/simply-google-1-37/">Simply Google</a> and the ICQ icon by <a href="http://www.iconfinder.com/icondetails/1413/128/flower_icq_icon">David Vignoni</a>.</p>
+			                <p>This plugin uses the following libraries:</p>
+                            <ul>
+                            	<li>&middot; <a href="http://code.google.com/p/xmpphp/">XMPPHP</a> by Nathanael C. Fritz,</li>
+                            	<li>&middot; <a href="http://wip.asminog.com/projects/icq/WebIcqLite.class.phps">WebICQLite</a> by Sergey Akudovich.</li>
+                            </ul>
+                            <p>It also uses the following icon sets:</p>
+                            <ul>
+                            	<li>&middot; <a href="http://www.smashingmagazine.com/2008/08/27/on-stage-a-free-icon-set">On Stage</a>,</li>
+                                <li>&middot; <a href="http://www.iconspedia.com/pack/simply-google-1-37/">Simply Google</a>,</li>
+                                <li>&middot; ICQ icon by <a href="http://www.iconfinder.com/icondetails/1413/128/flower_icq_icon">David Vignoni</a>.</li>
+                            </ul>
 			                <p>Any bugs, request and reports can be sent on the official plugin page on Wordpress.</p>						
                     	</td>
 					</tr>		
@@ -869,6 +879,7 @@
 					<tr>
 						<th scope="row"><img src="<?php echo plugin_dir_url(__FILE__).'images/icq.png'; ?>" height="96px" width="96px" /></th>
 						<td>
+                            <p>Please note that ICQ support is currently in an <strong><font color="#FF0000">experimental</font></strong> stage, so do write down your reset keys before continuing.</p>
 							<p>You can configure your ICQ account here. This account will be used to send out invites and dongle codes to other users.</p>
 			                <p>We recommend you create a separate account on ICQ <a href="http://www.icq.com/join/en">here</a>.</p>
 			                <p>When you've created your account, enter the login data bellow. Mark the dongle status checkbox when your account is registered.</p>
