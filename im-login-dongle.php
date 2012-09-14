@@ -43,6 +43,7 @@
 			if($plugin_options['version'] == "0.1") {
 				$plugin_options['version'] = "0.3";
 				$plugin_options['session_time'] = 60;
+				$plugin_options['show_message'] = false;
 				update_option('im_login_dongle_settings', $plugin_options);
 			}
 		}
@@ -54,6 +55,7 @@
 				'encryption_salt' => random_string(60), // The encryption salt string
 				'code_length' => 6, // How long is the dongle code that is sent
 				'session_time' => 60, // Session time validity in minutes
+				'show_message' => false,
 				'im_bots' => array( // Because of future versions, a multiple array
 					'gtalk' => array(
 						'im_bot_username' => '',
@@ -169,8 +171,11 @@
 
 			$conn->useEncryption(true);
 			
-			$message = "WP Login code \n\n".$code."\n \n"."This code was requested from ".$ip." and is valid for the next 30 seconds.".$plugin_options['custom_im_msg']."\n\n".
-				".: Powered by IM Login Dongle. (http://wpplugz.is-leet.com) :.";
+			$message = "WP Login code \n\n".$code."\n \n"."This code was requested from ".$ip." and is valid for the next 30 seconds.".$plugin_options['custom_im_msg'];
+			
+			if($plugin_options['show_message']) {
+				$message = $message."\n\n.: Powered by IM Login Dongle. (http://wpplugz.is-leet.com) :.";	
+			}
 
 			try {
 			    $conn->connect();
@@ -404,16 +409,27 @@
 			$code_len = intval($_POST['code_length']);
 			$status = $_POST['dongle_status'];
 			$session_time = $_POST['session_time'];
+			$msg_show = $_POST['show_message'];
+
 			if(isset($status)) { 
 				$status = true; 
 			} else { 
 				$status = false; 
 			}
 			
+			if(isset($msg_show)) {
+				$msg_show = true;	
+			}
+			else {
+				$msg_show = false;	
+			}
+
+			
 			$plugin_settings['code_length'] = $code_len;
 			$plugin_settings['custom_im_msg'] = $msg;
 			$plugin_settings['plugin_activated'] = $status;
 			$plugin_settings['session_time'] = $session_time;
+			$plugin_settings['message_show'] = $msg_show;
 			
 			update_option('im_login_dongle_settings', $plugin_settings);
 			$message = "General settings were successfully updated.";
@@ -471,6 +487,14 @@
 							<textarea rows="3" cols="80" name="custom_msg" id="custom_msg" ><?php echo esc_attr($plugin_settings['custom_im_msg']); ?></textarea>
 							<br />
             				<span class="description">A custom note that will be sent with the dongle key.</span>
+						</td>
+					</tr>		
+					<tr>
+						<th scope="row"><label for="show_message">Powered by message</label></th>
+						<td>
+							<input type="checkbox" name="show_message" id="show_message" value="true" <?php if($plugin_settings['show_message']) { ?>checked="checked"<?php } ?> />
+							<br />
+            				<span class="description">Enable or disable the "Powered by" message. If removed, please consider a donation.</span>
 						</td>
 					</tr>		
 					<tr>
