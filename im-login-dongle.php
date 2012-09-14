@@ -429,7 +429,7 @@
 			$plugin_settings['custom_im_msg'] = $msg;
 			$plugin_settings['plugin_activated'] = $status;
 			$plugin_settings['session_time'] = $session_time;
-			$plugin_settings['message_show'] = $msg_show;
+			$plugin_settings['show_message'] = $msg_show;
 			
 			update_option('im_login_dongle_settings', $plugin_settings);
 			$message = "General settings were successfully updated.";
