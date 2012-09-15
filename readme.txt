@@ -58,15 +58,10 @@ None at the moment.
 5. Plugin settings page #5, data management
 6. User profile settings page (here each user can enable or disable the two step authentication themselves)
 7. When plugin is activated, login procedure #1
-8. When plugin is activated, login procedure #2 using Google Talk
+8. When plugin is activated, login procedure #2
 9. The disable screen for IM Login Dongle if IM servers are down
-10. Plugin settings page #6, ICQ bot settings
-11. Logging in using ICQ
 
 == Changelog ==
-
-= 0.5 =
-* Added ICQ support (currently in experimental stage).
 
 = 0.3 =
 * Added disable codes for all users

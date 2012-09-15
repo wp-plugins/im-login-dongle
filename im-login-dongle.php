@@ -4,28 +4,10 @@
 		Plugin Name: IM Login Dongle
 		Plugin URI: http://wpplugz.is-leet.com
 		Description: A simple wordpress plugin that adds two way authentication via selected instant messenger.
-		Version: 0.5
+		Version: 0.3
 		Author: Bostjan Cigan
 		Author URI: http://bostjan.gets-it.net
 		License: GPL v2
-	*/
-	
-	// TODO: Rewrite kode, zdej je katastrofa ...
-	/*
-	
-	$os = PHP_OS;
-
-	Sprejemljivi: Linux, Minix, SunOS, FreeBSD, Darwin
-
-	Zagon IM klienta ICQ:
-
-	$file = "pid.txt";
-	$f = fopen($file, "w") or die("can't write");
-	fclose($f);
-	$output = exec('php test2.php > /dev/null & echo $! >> pid.txt');
-	
-	V test2.php, neskoncen loop, ki posilja message
-	
 	*/
 	
 	include_once('functions.php');
@@ -47,12 +29,11 @@
 	add_action('admin_menu', 'im_dongle_login_menu_create'); // Register the administration menu
 
 	function im_dongle_login_menu_create() {
-		add_menu_page('IM Login Dongle Settings', 'IM Login Dongle', 'administrator', 'im-login-dongle', 'im_login_dongle_settings_about', plugin_dir_url(__FILE__).'images/padlock.png');
-		add_submenu_page('im-login-dongle', 'General settings', 'General settings', 'administrator', 'im-login-dongle-general', 'im_login_dongle_general_settings');
-		add_submenu_page('im-login-dongle', 'Google Talk Bot', 'Google Talk Bot', 'administrator', 'im-login-dongle-gbot', 'im_login_dongle_gbot_settings');
-		add_submenu_page('im-login-dongle', 'ICQ Bot', 'ICQ Bot', 'administrator', 'im-login-dongle-icqbot', 'im_login_dongle_icqbot_settings');
-		add_submenu_page('im-login-dongle', 'Reset keys', 'Reset keys', 'administrator', 'im-login-dongle-codes', 'im_login_dongle_codes_settings');
-		add_submenu_page('im-login-dongle', 'Data liberation', 'Data liberation', 'administrator', 'im-login-dongle-data-liberation', 'im_login_dongle_data_liberation_settings');
+		add_menu_page('IM Login Dongle Settings', 'IM Login Dongle', 'administrator', 'im-login-dongle-main', 'im_login_dongle_settings_about', plugin_dir_url(__FILE__).'images/padlock.png');
+		add_submenu_page('im-login-dongle-main', 'General settings', 'General settings', 'administrator', 'im-login-dongle-general', 'im_login_dongle_general_settings');
+		add_submenu_page('im-login-dongle-main', 'Google Talk Bot', 'Google Talk Bot', 'administrator', 'im-login-dongle-gbot', 'im_login_dongle_gbot_settings');
+		add_submenu_page('im-login-dongle-main', 'Reset keys', 'Reset keys', 'administrator', 'im-login-dongle-codes', 'im_login_dongle_codes_settings');
+		add_submenu_page('im-login-dongle-main', 'Data liberation', 'Data liberation', 'administrator', 'im-login-dongle-data-liberation', 'im_login_dongle_data_liberation_settings');
 	}
 
 	function im_login_dongle_install() {
@@ -60,20 +41,16 @@
 		$plugin_options = get_option('im_login_dongle_settings');
 		if(isset($plugin_options['version'])) {
 			if($plugin_options['version'] == "0.1") {
-				$plugin_options['version'] = "0.5";
+				$plugin_options['version'] = "0.3";
 				$plugin_options['session_time'] = 60;
 				$plugin_options['show_message'] = false;
-				update_option('im_login_dongle_settings', $plugin_options);
-			}
-			else if($plugin_options['version'] == "0.3") {
-				$plugin_options['version'] = "0.5";	
 				update_option('im_login_dongle_settings', $plugin_options);
 			}
 		}
 		else {
 			$plugin_options = array(
 				'custom_im_msg' => '',
-				'version' => '0.5', // Plugin version
+				'version' => '0.3', // Plugin version
 				'plugin_activated' => false, // Is plugin activated?
 				'encryption_salt' => random_string(60), // The encryption salt string
 				'code_length' => 6, // How long is the dongle code that is sent
@@ -81,12 +58,6 @@
 				'show_message' => false,
 				'im_bots' => array( // Because of future versions, a multiple array
 					'gtalk' => array(
-						'im_bot_username' => '',
-						'im_bot_domain' => '',
-						'activated' => false,
-						'im_bot_password' => ''
-					),
-					'icq' => array(
 						'im_bot_username' => '',
 						'im_bot_domain' => '',
 						'activated' => false,
@@ -145,14 +116,8 @@
 				$im_id = $user_dongle_settings['im_login_dongle_id']; // Get the IM of the current user
 				$send_msg = send_dongle_message($current_user->ID, $im_id, $dongle_code, $user_dongle_settings['im_login_dongle_type']); // Send the dongle code to the user
 				if(!$send_msg) {
-					if(is_admin()) {
-						$redirect_url = plugin_dir_url(__FILE__).'shutdown.php?error';
-						wp_redirect($redirect_url, 301);						
-					}
-					else {
-						$redirect_url = plugin_dir_url(__FILE__).'disable.php?error';
-						wp_redirect($redirect_url, 301);						
-					}
+					$redirect_url = plugin_dir_url(__FILE__).'disable.php?error';
+					wp_redirect($redirect_url, 301);
 				}
 				else {
 					$dongle_id_encrypted = encrypt($dongle_id, $plugin_options['encryption_salt']);
@@ -195,13 +160,6 @@
 
 			require_once 'XMPPHP/XMPP.php';
 			
-			$message = "WP Login code \n\n".$code."\n \n"."This code was requested from ".$ip." and is valid for the next 30 seconds.".$plugin_options['custom_im_msg'];
-			
-			if($plugin_options['show_message']) {
-				$message = $message."\n\n.: Powered by IM Login Dongle. (http://wpplugz.is-leet.com) :.";	
-			}
-
-			
 			$conn = new XMPPHP_XMPP('talk.google.com', 
 										5222, 
 										$plugin_options['im_bots']['gtalk']['im_bot_username'], 
@@ -213,6 +171,12 @@
 
 			$conn->useEncryption(true);
 			
+			$message = "WP Login code \n\n".$code."\n \n"."This code was requested from ".$ip." and is valid for the next 30 seconds.".$plugin_options['custom_im_msg'];
+			
+			if($plugin_options['show_message']) {
+				$message = $message."\n\n.: Powered by IM Login Dongle. (http://wpplugz.is-leet.com) :.";	
+			}
+
 			try {
 			    $conn->connect();
 			    $conn->processUntil('session_start');
@@ -222,26 +186,6 @@
 			} catch(XMPPHP_Exception $e) {
 				$connection_success = false;
 			}
-			
-		}
-		else if($type == "icq") {
-		
-			require_once 'ICQ/WebIcqLite.class.php';
-			
-			$message = "WP Login code \n\n".$code."\n \n"."This code was requested from ".$ip." and is valid for the next 30 seconds.".$plugin_options['custom_im_msg'];
-			
-			if($plugin_options['show_message']) {
-				$message = $message."\n\n.: Powered by IM Login Dongle :.";	
-			}
-			
-			$icq = new WebIcqLite();
-			$icq_pass = decrypt($plugin_options['im_bots']['icq']['im_bot_password'], $plugin_options['encryption_salt']);
-			$icq->connect($plugin_options['im_bots']['icq']['im_bot_username'], $icq_pass);
-			$send_msg = $icq->send_message($email, $message);
-			if(!$send_msg) {
-				$connection_success = false;
-			}
-			$icq->disconnect();
 			
 		}
 		
@@ -312,8 +256,7 @@
 				<th scope="row"><label for="im_login_dongle_type">IM type</label></th>
 				<td>
 					<select name="im_login_dongle_type" id="im_login_dongle_type">
-						<option value="gtalk" <?php if($dongle_settings['im_login_dongle_type'] == "gtalk") { ?> selected="selected" <?php } ?>>Google Talk</option>
-                        <option value="icq" <?php if($dongle_settings['im_login_dongle_type'] == "icq") { ?> selected="selected" <?php } ?>>ICQ</option>
+						<option value="gtalk">Google Talk</option>
 					</select>
                     <br />
 					<span class="description">Select your IM.</span>
@@ -323,7 +266,7 @@
 				<th scope="row"><label for="im_login_dongle_id">Instant messenger ID</label></th>
 				<td>
 					<input type="text" name="im_login_dongle_id" id="im_login_dongle_id" value="<?php echo esc_attr($dongle_settings['im_login_dongle_id']); ?>" class="regular-text" /><br />
-					<span class="description">Please enter your IM ID (Google Talk example: someone@gmail.com, ICQ example: 123456789).</span>
+					<span class="description">Please enter your IM ID (Google Talk example: someone@gmail.com).</span>
 				</td>
 			</tr>      
 			<tr>
@@ -481,6 +424,7 @@
 				$msg_show = false;	
 			}
 
+			
 			$plugin_settings['code_length'] = $code_len;
 			$plugin_settings['custom_im_msg'] = $msg;
 			$plugin_settings['plugin_activated'] = $status;
@@ -550,7 +494,7 @@
 						<td>
 							<input type="checkbox" name="show_message" id="show_message" value="true" <?php if($plugin_settings['show_message']) { ?>checked="checked"<?php } ?> />
 							<br />
-            				<span class="description">Enable or disable the "Powered by" message. If you decide to check it, thank you for supporting this plugin, if not, please consider a donation.</span>
+            				<span class="description">Enable or disable the "Powered by" message. If removed, please consider a donation.</span>
 						</td>
 					</tr>		
 					<tr>
@@ -760,11 +704,8 @@
 						<th scope="row"><img src="<?php echo plugin_dir_url(__FILE__).'images/about.png'; ?>" height="96px" width="96px" /></th>
 						<td>
 							<p>This plugin was created by <a href="http://wpplugz.is-leet.com">wpPlugz</a>.</p>
-			                <p>The "Powered by" message in IMs is disabled by default.</p>
-                            <p>You can select to show it voluntarily (in the general settings tab by marking "Powered by message"), it would mean a lot to me.</p>
-                            <p>If you decide not to show it, please consider a donation.</p>
-			                <p>This plugin uses the following libraries: <a href="http://code.google.com/p/xmpphp/">XMPPHP</a> <strong>&middot;</strong> <a href="http://wip.asminog.com/projects/icq/WebIcqLite.class.phps">WebICQLite</a></p>
-                            <p>It also uses the following icon sets: <a href="http://www.smashingmagazine.com/2008/08/27/on-stage-a-free-icon-set">On Stage</a> <strong>&middot;</strong> <a href="http://www.iconspedia.com/pack/simply-google-1-37/">Simply Google</a> <strong>&middot;</strong> <a href="http://www.iconfinder.com/icondetails/1413/128/flower_icq_icon">David Vignoni ICQ icon</a></p>
+			                <p>Please leave the "Powered by" message in the IMs intact. If you change it anyway, than please consider a donation.</p>
+			                <p>This plugin uses the <a href="http://code.google.com/p/xmpphp/">XMPPHP</a> library and the following icon sets: <a href="http://www.smashingmagazine.com/2008/08/27/on-stage-a-free-icon-set">On Stage</a>, <a href="http://www.iconspedia.com/pack/simply-google-1-37/">Simply Google</a>.</p>
 			                <p>Any bugs, request and reports can be sent on the official plugin page on Wordpress.</p>						
                     	</td>
 					</tr>		
@@ -857,111 +798,5 @@
 <?
 
 	}
-
-	// The plugin admin page
-	function im_login_dongle_icqbot_settings() {
-		
-		$message = "";
-		
-		$plugin_settings = get_option('im_login_dongle_settings');
-		
-		if(isset($_POST['icq-submit'])) {
-		
-			$id = $_POST['icq_id'];
-			$pass = $_POST['icq_pass'];
-			$pass_cmp = $_POST['icq_pass_conf'];
-			$status = $_POST['icq_status'];
-
-			if(isset($status)) { 
-				$status = true; 
-			} else { 
-				$status = false; 
-			}
-
-			if(isset($pass) && isset($pass_cmp) && strlen($pass) > 0 && strlen($pass_cmp) > 0) {
-				if(strcmp($pass, $pass_cmp) == 0) {
-					$pass = encrypt($pass, $plugin_settings['encryption_salt']);
-					$plugin_settings['im_bots']['icq']['im_bot_password'] = $pass;
-				}
-				else {
-					$message = "Passwords for ICQ Bot account did not match.";	
-				}
-			}
 			
-			if(isset($id)) {
-				$plugin_settings['im_bots']['icq']['im_bot_username'] = $id;	
-			}
-			if(isset($domain)) {
-				$plugin_settings['im_bots']['icq']['im_bot_domain'] = $domain;	
-			}
-			
-			$plugin_settings['im_bots']['icq']['activated'] = $status;
-			
-			update_option('im_login_dongle_settings', $plugin_settings);
-			$message = $message." ICQ Bot settings were successfully saved.";			
-			
-		}
-
-		
 ?>
-		<div id="icon-options-general" class="icon32"></div><h2>IM Login Dongle ICQ Bot Settings</h2>
-<?php
-
-		if(strlen($message) > 0) {
-		
-?>
-
-			<div id="message" class="updated">
-				<p><strong><?php echo $message; ?></strong></p>
-			</div>
-
-<?php
-			
-		}
-
-?>
-        
-                <form method="post" action="">
-				<table class="form-table">
-					<tr>
-						<th scope="row"><img src="<?php echo plugin_dir_url(__FILE__).'images/icq.png'; ?>" height="96px" width="96px" /></th>
-						<td>
-                            <?php //<p>Please note that ICQ support is currently in an <strong><font color="#FF0000">experimental</font></strong> stage, so do write down your reset keys before continuing.</p> ?>
-							<p>You can configure your ICQ account here. This account will be used to send out invites and dongle codes to other users.</p>
-			                <p>We recommend you create a separate account on ICQ <a href="http://www.icq.com/join/en">here</a>.</p>
-			                <p>When you've created your account, enter the login data bellow. Mark the dongle status checkbox when your account is registered.</p>
-                    	</td>
-					</tr>		
-					<tr>
-						<th scope="row"><label for="icq_id">Account ID</label></th>
-						<td>
-							<input name="icq_id" id="icq_id" type="text" value="<?php echo esc_attr($plugin_settings['im_bots']['icq']['im_bot_username']); ?>" />
-							<br />
-            				<span class="description">The ICQ account ID (not your mail address, number example: 123456789).</span>
-						</td>
-					</tr>		
-					<tr>
-						<th scope="row"><label for="icq_pass">Password and confirmation</label></th>
-						<td>
-							<input name="icq_pass" id="icq_pass" type="password" /><br />
-							<input name="icq_pass_conf" id="icq_pass_conf" type="password" /><br />
-            				<span class="description">Account password.</span>
-						</td>
-					</tr>		
-					<tr>
-						<th scope="row"><label for="icq_status">Dongle status</label></th>
-						<td>
-							<input type="checkbox" id="icq_status" id="icq_status" name="icq_status" value="true" 
-							<?php if($plugin_settings['im_bots']['icq']['activated']) { ?>checked="checked"<?php } ?> />
-							<br />
-            				<span class="description">Enable or disable the selected account.</span>
-						</td>
-					</tr>		
-				</table>					
-				<p><input type="submit" name="icq-submit" class="button-primary" value="<?php esc_attr_e('Update ICQ options') ?>" /></p>
-				</form>
-
-<?
-
-	}
-			
