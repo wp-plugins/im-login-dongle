@@ -65,8 +65,12 @@ None at the moment.
 
 == Changelog ==
 
-= 0.5 =
-* Added ICQ support (currently in experimental stage).
+= 1.0 =
+* Added ICQ support
+* A lot of code rewritten and optimized
+* Added possibility of IM logs
+* Users can now add multiple IM accounts
+* Users can now choose the IM account they want to authorize with
 
 = 0.3 =
 * Added disable codes for all users
