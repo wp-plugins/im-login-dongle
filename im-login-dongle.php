@@ -10,6 +10,24 @@
 		License: GPL v2
 	*/
 	
+	// TODO: Rewrite kode, zdej je katastrofa ...
+	/*
+	
+	$os = PHP_OS;
+
+	Sprejemljivi: Linux, Minix, SunOS, FreeBSD, Darwin
+
+	Zagon IM klienta ICQ:
+
+	$file = "pid.txt";
+	$f = fopen($file, "w") or die("can't write");
+	fclose($f);
+	$output = exec('php test2.php > /dev/null & echo $! >> pid.txt');
+	
+	V test2.php, neskoncen loop, ki posilja message
+	
+	*/
+	
 	include_once('functions.php');
 	
 	// First we register all the functions, actions, hooks ...
@@ -29,12 +47,12 @@
 	add_action('admin_menu', 'im_dongle_login_menu_create'); // Register the administration menu
 
 	function im_dongle_login_menu_create() {
-		add_menu_page('IM Login Dongle Settings', 'IM Login Dongle', 'administrator', 'im-login-dongle-main', 'im_login_dongle_settings_about', plugin_dir_url(__FILE__).'images/padlock.png');
-		add_submenu_page('im-login-dongle-main', 'General settings', 'General settings', 'administrator', 'im-login-dongle-general', 'im_login_dongle_general_settings');
-		add_submenu_page('im-login-dongle-main', 'Google Talk Bot', 'Google Talk Bot', 'administrator', 'im-login-dongle-gbot', 'im_login_dongle_gbot_settings');
-		add_submenu_page('im-login-dongle-main', 'ICQ Bot', 'ICQ Bot', 'administrator', 'im-login-dongle-icqbot', 'im_login_dongle_icqbot_settings');
-		add_submenu_page('im-login-dongle-main', 'Reset keys', 'Reset keys', 'administrator', 'im-login-dongle-codes', 'im_login_dongle_codes_settings');
-		add_submenu_page('im-login-dongle-main', 'Data liberation', 'Data liberation', 'administrator', 'im-login-dongle-data-liberation', 'im_login_dongle_data_liberation_settings');
+		add_menu_page('IM Login Dongle Settings', 'IM Login Dongle', 'administrator', 'im-login-dongle', 'im_login_dongle_settings_about', plugin_dir_url(__FILE__).'images/padlock.png');
+		add_submenu_page('im-login-dongle', 'General settings', 'General settings', 'administrator', 'im-login-dongle-general', 'im_login_dongle_general_settings');
+		add_submenu_page('im-login-dongle', 'Google Talk Bot', 'Google Talk Bot', 'administrator', 'im-login-dongle-gbot', 'im_login_dongle_gbot_settings');
+		add_submenu_page('im-login-dongle', 'ICQ Bot', 'ICQ Bot', 'administrator', 'im-login-dongle-icqbot', 'im_login_dongle_icqbot_settings');
+		add_submenu_page('im-login-dongle', 'Reset keys', 'Reset keys', 'administrator', 'im-login-dongle-codes', 'im_login_dongle_codes_settings');
+		add_submenu_page('im-login-dongle', 'Data liberation', 'Data liberation', 'administrator', 'im-login-dongle-data-liberation', 'im_login_dongle_data_liberation_settings');
 	}
 
 	function im_login_dongle_install() {
@@ -42,16 +60,20 @@
 		$plugin_options = get_option('im_login_dongle_settings');
 		if(isset($plugin_options['version'])) {
 			if($plugin_options['version'] == "0.1") {
-				$plugin_options['version'] = "0.3";
+				$plugin_options['version'] = "0.5";
 				$plugin_options['session_time'] = 60;
 				$plugin_options['show_message'] = false;
+				update_option('im_login_dongle_settings', $plugin_options);
+			}
+			else if($plugin_options['version'] == "0.3") {
+				$plugin_options['version'] = "0.5";	
 				update_option('im_login_dongle_settings', $plugin_options);
 			}
 		}
 		else {
 			$plugin_options = array(
 				'custom_im_msg' => '',
-				'version' => '0.3', // Plugin version
+				'version' => '0.5', // Plugin version
 				'plugin_activated' => false, // Is plugin activated?
 				'encryption_salt' => random_string(60), // The encryption salt string
 				'code_length' => 6, // How long is the dongle code that is sent
@@ -528,7 +550,7 @@
 						<td>
 							<input type="checkbox" name="show_message" id="show_message" value="true" <?php if($plugin_settings['show_message']) { ?>checked="checked"<?php } ?> />
 							<br />
-            				<span class="description">Enable or disable the "Powered by" message. If removed, please consider a donation.</span>
+            				<span class="description">Enable or disable the "Powered by" message. If you decide to check it, thank you for supporting this plugin, if not, please consider a donation.</span>
 						</td>
 					</tr>		
 					<tr>
@@ -738,18 +760,11 @@
 						<th scope="row"><img src="<?php echo plugin_dir_url(__FILE__).'images/about.png'; ?>" height="96px" width="96px" /></th>
 						<td>
 							<p>This plugin was created by <a href="http://wpplugz.is-leet.com">wpPlugz</a>.</p>
-			                <p>Please leave the "Powered by" message in the IMs intact. If you change it anyway, than please consider a donation.</p>
-			                <p>This plugin uses the following libraries:</p>
-                            <ul>
-                            	<li>&middot; <a href="http://code.google.com/p/xmpphp/">XMPPHP</a> by Nathanael C. Fritz,</li>
-                            	<li>&middot; <a href="http://wip.asminog.com/projects/icq/WebIcqLite.class.phps">WebICQLite</a> by Sergey Akudovich.</li>
-                            </ul>
-                            <p>It also uses the following icon sets:</p>
-                            <ul>
-                            	<li>&middot; <a href="http://www.smashingmagazine.com/2008/08/27/on-stage-a-free-icon-set">On Stage</a>,</li>
-                                <li>&middot; <a href="http://www.iconspedia.com/pack/simply-google-1-37/">Simply Google</a>,</li>
-                                <li>&middot; ICQ icon by <a href="http://www.iconfinder.com/icondetails/1413/128/flower_icq_icon">David Vignoni</a>.</li>
-                            </ul>
+			                <p>The "Powered by" message in IMs is disabled by default.</p>
+                            <p>You can select to show it voluntarily (in the general settings tab by marking "Powered by message"), it would mean a lot to me.</p>
+                            <p>If you decide not to show it, please consider a donation.</p>
+			                <p>This plugin uses the following libraries: <a href="http://code.google.com/p/xmpphp/">XMPPHP</a> <strong>&middot;</strong> <a href="http://wip.asminog.com/projects/icq/WebIcqLite.class.phps">WebICQLite</a></p>
+                            <p>It also uses the following icon sets: <a href="http://www.smashingmagazine.com/2008/08/27/on-stage-a-free-icon-set">On Stage</a> <strong>&middot;</strong> <a href="http://www.iconspedia.com/pack/simply-google-1-37/">Simply Google</a> <strong>&middot;</strong> <a href="http://www.iconfinder.com/icondetails/1413/128/flower_icq_icon">David Vignoni ICQ icon</a></p>
 			                <p>Any bugs, request and reports can be sent on the official plugin page on Wordpress.</p>						
                     	</td>
 					</tr>		
