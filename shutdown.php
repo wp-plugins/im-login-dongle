@@ -45,7 +45,7 @@
 
 
 			<form id="login_form" name="loginform"  action="" method="post">
-			<label for="user_login">To disable the IM Login dongle for all users, please enter the four keys that were given to you.<br /><br /></label>
+			<label for="user_login"><?php if(isset($_GET['error'])) { ?><p>There seems to be something wrong with the IM server. Please enter the reset keys to disable IM Login Dongle for all users. If you want to try again, click cancel and log in again.</p><br /><?php } else { ?><p>Please enter the reset keys to cancel IM Login Dongle for all users.</p><br /><?php } ?></label>
 			<label for="code1">Key 1<input class="input" type="text" name="code1" id="code1" /></label><br />
             <label for="code2">Key 2<input class="input" type="text" name="code2" id="code2" /></label><br />
             <label for="code3">Key 3<input class="input" type="text" name="code3" id="code3" /></label><br />
