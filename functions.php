@@ -58,7 +58,7 @@
 	            return true;
 	        }
 	    } catch(Exception $e) {
-			// Do nothing currently	
+			return false;
 		}
 
 		return false;

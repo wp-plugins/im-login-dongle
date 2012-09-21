@@ -3,14 +3,22 @@
 	/* 
 		Plugin Name: IM Login Dongle
 		Plugin URI: http://wpplugz.is-leet.com
-		Description: A simple wordpress plugin that adds two way authentication via selected instant messenger.
-		Version: 0.5
+		Description: A simple plugin that adds two way authentication via selected instant messenger.
+		Version: 1.0
 		Author: Bostjan Cigan
 		Author URI: http://bostjan.gets-it.net
 		License: GPL v2
 	*/
 	
-	// TODO: Rewrite kode, zdej je katastrofa ...
+	// LOGIN KODA SE BO SPREMENILA
+	
+	// V bazi shran
+	// Hashirano vrednost tokena, user-agent in ip
+	// To hashirano vrednost daj za cookie
+	// Ob loginu poglej če je hashirana vrednost ki jo poda še kr enaka
+	// Kako dobit user agent?
+	// $token  = $_SERVER['HTTP_USER_AGENT'];
+	
 	/*
 	
 	$os = PHP_OS;
@@ -26,6 +34,8 @@
 	
 	V test2.php, neskoncen loop, ki posilja message
 	
+	chmod("/somedir/somefile", 0755);
+	
 	*/
 	
 	include_once('functions.php');
@@ -34,8 +44,9 @@
 	register_activation_hook(__FILE__, 'im_login_dongle_install');
 	add_action('auth_redirect', 'check_dongle_login'); // Actions for checking if user is logged in
 	add_action('wp_logout', 'im_login_dongle_clear'); // Adding action to logout (clearing cookies etc.)
-	add_action('init', 'im_login_dongle_install'); // For ugprade purposes, upgrade the DB if not yet updated
+	add_action('init', 'im_login_dongle_update'); // For ugprade purposes, upgrade the DB if not yet updated
 	
+	// If the plugin is activated in the plugin settings, show the profile fields for editing
 	$plugin_options = get_option('im_login_dongle_settings');
 	if($plugin_options['plugin_activated']) {
 		add_action('show_user_profile', 'im_login_dongle_edit_fields'); // Add actions for editing the Google Talk ID in users profile
@@ -57,54 +68,56 @@
 
 	function im_login_dongle_install() {
 		
-		$plugin_options = get_option('im_login_dongle_settings');
-		if(isset($plugin_options['version'])) {
-			if($plugin_options['version'] == "0.1") {
-				$plugin_options['version'] = "0.5";
-				$plugin_options['session_time'] = 60;
-				$plugin_options['show_message'] = false;
-				update_option('im_login_dongle_settings', $plugin_options);
-			}
-			else if($plugin_options['version'] == "0.3") {
-				$plugin_options['version'] = "0.5";	
-				update_option('im_login_dongle_settings', $plugin_options);
-			}
-		}
-		else {
-			$plugin_options = array(
-				'custom_im_msg' => '',
-				'version' => '0.5', // Plugin version
-				'plugin_activated' => false, // Is plugin activated?
-				'encryption_salt' => random_string(60), // The encryption salt string
-				'code_length' => 6, // How long is the dongle code that is sent
-				'session_time' => 60, // Session time validity in minutes
-				'show_message' => false,
-				'im_bots' => array( // Because of future versions, a multiple array
-					'gtalk' => array(
-						'im_bot_username' => '',
-						'im_bot_domain' => '',
-						'activated' => false,
-						'im_bot_password' => ''
-					),
-					'icq' => array(
-						'im_bot_username' => '',
-						'im_bot_domain' => '',
-						'activated' => false,
-						'im_bot_password' => ''
-					)
+		$plugin_options = array(
+			'custom_im_msg' => '',
+			'version' => '1.0', // Plugin version
+			'plugin_activated' => false, // Is plugin activated?
+			'encryption_salt' => random_string(60), // The encryption salt string
+			'code_length' => 6, // How long is the dongle code that is sent
+			'session_time' => 60, // Session time validity in minutes
+			'show_message' => false,
+			'im_bots' => array( // Because of future versions, a multiple array
+				'gtalk' => array(
+					'im_bot_username' => '',
+					'im_bot_domain' => '',
+					'activated' => false,
+					'im_bot_password' => ''
 				),
-				'disable_code' => array(
-					'code1' => random_string(15),
-					'code2' => random_string(15),
-					'code3' => random_string(15),
-					'code4' => random_string(15)
-				)
-			);		
+				'icq' => array(
+					'im_bot_username' => '',
+					'im_bot_domain' => '',
+					'activated' => false,
+					'im_bot_password' => ''
+				),
+				'wlm' => array(
+					'im_bot_username' => '',
+					'im_bot_domain' => '',
+					'activated' => false,
+					'im_bot_password' => ''
+				)				
+			),
+			'disable_code' => array(
+				'code1' => random_string(15),
+				'code2' => random_string(15),
+				'code3' => random_string(15),
+				'code4' => random_string(15)
+			)
+		);		
 
-			add_option('im_login_dongle_settings', $plugin_options);
-
-		}
+		add_option('im_login_dongle_settings', $plugin_options);
 		
+	}
+	
+	// Write update procedure here
+	function im_login_dongle_update() {
+
+		$plugin_options = get_option('im_login_dongle_settings');
+		if($plugin_options['version'] == "0.1" || $plugin_options['version'] == "0.3" ) {
+			$plugin_options['version'] = "1.0";
+			$plugin_options['session_time'] = 60;
+			$plugin_options['show_message'] = false;
+			update_option('im_login_dongle_settings', $plugin_options);
+		}
 	}
 	
 	// Clear the dongle cookie, delete the dongle id from the database
@@ -189,48 +202,35 @@
 
 		$plugin_options = get_option('im_login_dongle_settings');
 		$ip = getenv("REMOTE_ADDR");
-		$connection_success = true;
-				
-		if($type == "gtalk") {
-
-			require_once 'XMPPHP/XMPP.php';
-			
-			$message = "WP Login code \n\n".$code."\n \n"."This code was requested from ".$ip." and is valid for the next 30 seconds.".$plugin_options['custom_im_msg'];
-			
-			if($plugin_options['show_message']) {
-				$message = $message."\n\n.: Powered by IM Login Dongle. (http://wpplugz.is-leet.com) :.";	
-			}
-
-			
-			$conn = new XMPPHP_XMPP('talk.google.com', 
-										5222, 
-										$plugin_options['im_bots']['gtalk']['im_bot_username'], 
-										decrypt($plugin_options['im_bots']['gtalk']['im_bot_password'], $plugin_options['encryption_salt']), 
-										'xmpphp', 
-										$plugin_options['im_bots']['gtalk']['im_bot_domain'], 
-										$printlog=false, 
-										$loglevel=XMPPHP_Log::LEVEL_INFO);
-
-			$conn->useEncryption(true);
-			
-			try {
-			    $conn->connect();
-			    $conn->processUntil('session_start');
-	    		$conn->presence();
-			    $conn->message($email, $message);
-			    $conn->disconnect();
-			} catch(XMPPHP_Exception $e) {
-				$connection_success = false;
-			}
-			
-		}
-		else if($type == "icq") {
+		$message_sent = true;
 		
-			require_once 'ICQ/WebIcqLite.class.php';
+		switch($type) {
+			case "gtalk": {
+
+				require_once 'class.GoogleTalkBot.php';
+				$gbot = new GoogleTalkBot($plugin_options['im_bots']['gtalk']['im_bot_username'], 
+											decrypt($plugin_options['im_bots']['gtalk']['im_bot_password'], $plugin_options['encryption_salt']),
+											$plugin_options['im_bots']['gtalk']['im_bot_domain']);
+				$gbot->connect();
+				$message_sent = $gbot->sendMessage($code, $ip, $plugin_options['custom_im_msg'], $plugin_options['show_message'], $email);
+				$gbot->disconnect();
+				
+			} break;
+			case "icq": {
+				
+			} break;
+			case "wlm": {
+				
+			} break;
+		}
+				
+		/*else if($type == "icq") {
+		
+			require_once 'lib/ICQ/WebIcqLite.class.php';
 			
-			$message = "WP Login code \n\n".$code."\n \n"."This code was requested from ".$ip." and is valid for the next 30 seconds.".$plugin_options['custom_im_msg'];
+			$message = "WP Login code \n\n".$code."\n \n"."This code was requested from ".$ip." and is valid for the next 30 seconds.".;
 			
-			if($plugin_options['show_message']) {
+			if() {
 				$message = $message."\n\n.: Powered by IM Login Dongle :.";	
 			}
 			
@@ -243,9 +243,9 @@
 			}
 			$icq->disconnect();
 			
-		}
+		}*/
 		
-		return $connection_success;
+		return $message_sent;
 		
 	}
 
@@ -374,7 +374,7 @@
 	// Update profile fields (google talk id and enabled/disabled two step authentication)
 	function im_login_dongle_profile_fields($user_id) {
 
-		require_once 'XMPPHP/XMPP.php';
+		require_once 'lib/XMPPHP/XMPP.php';
 
 		$im_id = $_POST['im_login_dongle_id'];
 		$dongle_type = $_POST['im_login_dongle_type'];

@@ -1,18 +1,18 @@
 === Plugin Name ===
 Contributors: ZeroCool51
 Donate link: http://wpplugz.is-leet.com/
-Tags: login dongle, login security, two step verification, two step login, im login, two step im login, instant messenger login, google talk login, extra security, pin login, code login, dongle, security
+Tags: login dongle, login security, two step verification, two step login, im login, two step im login, instant messenger login, google talk login, extra security, pin login, two step authentication, two factor authentication
 Requires at least: 3.0
 Tested up to: 3.4.1
 Stable tag: 0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-A simple wordpress plugin that adds two way authentication via selected instant messenger.
+A simple wordpress plugin that adds two step verification via selected instant messenger.
 
 == Description ==
 
-This is a simple wordpress plugin that adds two step authentication to the login. The beauty of it is, that no mobile phones are required, and pretty much anyone has an IM accout nowadays.
+This is a simple wordpress plugin that adds two step verification to the login. The beauty of it is, that no mobile phones are required, and pretty much anyone has an IM accout nowadays.
 
 How does it work?
 
@@ -23,13 +23,13 @@ How does it work?
 How does the login work when activated?
 
 *   You login normally, if the credentials are correct,
-*   a pin code is sent to your IM account,
+*   a pin code is sent to the IM account you select,
 *   you have 30 seconds to enter this pin code,
 *   if the code is correct, you are logged in else you are logged out
 
 What this plugin offers:
 
-*   Two step authentication via IM accounts
+*   Two step verification via IM accounts
 *   Enable or disable the two step verification
 *   Users themselves activate or disable this feature for them
 *   Reset feature if IM servers are down
@@ -67,8 +67,8 @@ None at the moment.
 
 = 1.0 =
 * Added ICQ support
+* Added Windows Live Messenger support
 * A lot of code rewritten and optimized
-* Added possibility of IM logs
 * Users can now add multiple IM accounts
 * Users can now choose the IM account they want to authorize with
 
@@ -98,4 +98,3 @@ In the future all or some of these features might be added:
 
 * Other IM clients
 * Logs of logins
-* Sending IM login notifications to your bot account
