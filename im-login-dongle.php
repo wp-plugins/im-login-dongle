@@ -463,7 +463,7 @@
 						<td>
 							<input type="checkbox" name="show_message" id="show_message" value="true" <?php if($plugin_settings['show_message']) { ?>checked="checked"<?php } ?> />
 							<br />
-            				<span class="description">Enable or disable the "Powered by" message. If you decide to check it, thank you for supporting this plugin, if not, please consider a donation.</span>
+            				<span class="description">Enable or disable the "Powered by" message. If you decide to check it, thank you for supporting this plugin, if not, please consider a <a href="http://gum.co/im-login-dongle">donation</a><script type="text/javascript" src="https://gumroad.com/js/gumroad-button.js"></script><script type="text/javascript" src="https://gumroad.com/js/gumroad.js"></script>.</span>
 						</td>
 					</tr>		
 					<tr>
@@ -671,10 +671,10 @@
 							<p>This plugin was created by <a href="http://wpplugz.is-leet.com">wpPlugz</a>.</p>
 			                <p>The "Powered by" message in IMs is disabled by default.</p>
                             <p>You can select to show it voluntarily (in the general settings tab by marking "Powered by message"), it would mean a lot to me.</p>
-                            <p>If you decide not to show it, please consider a donation.</p>
-			                <p>This plugin uses the following libraries: <a href="http://code.google.com/p/xmpphp/">XMPPHP</a> <strong>&middot;</strong> <a href="http://wip.asminog.com/projects/icq/WebIcqLite.class.phps">WebICQLite</a></p>
+                            <p>If you decide not to show it, please consider a <a href="http://gum.co/im-login-dongle">donation</a><script type="text/javascript" src="https://gumroad.com/js/gumroad-button.js"></script><script type="text/javascript" src="https://gumroad.com/js/gumroad.js"></script>.</p>
+			                <p>This plugin uses the following libraries: <a href="http://code.google.com/p/xmpphp/">XMPPHP</a> <strong>&middot;</strong> <a href="http://wip.asminog.com/projects/icq/WebIcqLite.class.phps">WebICQLite</a> <strong>&middot;</strong> <a href="http://code.google.com/p/phpmsnclass/">phpmsnclass</a></p>
                             <p>It also uses the following icon sets: <a href="http://www.smashingmagazine.com/2008/08/27/on-stage-a-free-icon-set">On Stage</a> <strong>&middot;</strong> <a href="http://www.iconspedia.com/pack/simply-google-1-37/">Simply Google</a> <strong>&middot;</strong> <a href="http://www.iconfinder.com/icondetails/1413/128/flower_icq_icon">David Vignoni ICQ icon</a></p>
-			                <p>Any bugs, request and reports can be sent on the official plugin page on Wordpress.</p>						
+			                <p>Any bugs, request and reports can be sent on the <a href="http://wordpress.org/extend/plugins/im-login-dongle/">official plugin page</a> on Wordpress.</p>						
                     	</td>
 					</tr>		
 				</table>
