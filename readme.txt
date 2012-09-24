@@ -1,6 +1,6 @@
 === Plugin Name ===
 Contributors: ZeroCool51
-Donate link: http://wpplugz.is-leet.com/
+Donate link: http://gum.co/im-login-dongle
 Tags: login dongle, login security, two step verification, two step login, im login, two step im login, instant messenger login, google talk login, extra security, pin login, code login, dongle, security
 Requires at least: 3.0
 Tested up to: 3.4.1
