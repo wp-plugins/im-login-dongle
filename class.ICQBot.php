@@ -28,7 +28,7 @@
 			}
 		}
 		
-		public function sendDataToBot($ar_s) {
+		protected function sendDataToBot($ar_s) {
 			$data_sent = true;			
 			if($this->connected) {
 				if(!($sock = socket_create(AF_INET, SOCK_STREAM, 0))) {

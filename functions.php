@@ -100,6 +100,32 @@
 		}
 		return false;
 	}
+		
+	function delete_dongle_code($user_id, $dongle_id) {
+	
+		$dongle_data = get_user_meta($user_id, 'im_login_dongle_data', true);
+		if(is_array($dongle_data)) {
+			unset($dongle_data[$dongle_id]);
+			update_user_meta($user_id, 'im_login_dongle_data', $dongle_data);				
+		}
+		
+	}
+	
+	// Check if user has entered any im account
+	function user_has_im_account($user_id) {
+		
+		$user_data = get_user_meta($user_id, 'im_login_dongle_settings', true);
+		if(is_array($user_data)) {
+			if(strlen($user_data['im_accounts']['gtalk']['id']) > 0
+								|| strlen($user_data['im_accounts']['wlm']['id']) > 0  
+								|| strlen($user_data['im_accounts']['icq']['id']) > 0) {
+				return true;
+			}
+		}
+		
+		return false;
+		
+	}
 			
 	// Generate a valid 30 second dongle code and insert it into the DB
 	function insert_dongle_code($user_id, $dongle_code) {
@@ -151,6 +177,27 @@
 		}
 		
 		return $active;
+		
+	}
+	
+	function get_active_bot_accounts_html($settings) {
+	
+		$html = "";
+	
+		foreach($settings['im_bots'] as $account => $data) {
+			if($data['activated']) {
+				$html = $html.'<label for="'.$account.'">'.$data['im_bot_name'].' ID ';
+				$html = $html.'</label><input class="input" type="text" name="'.$account.'" id="'.$account.'" />';
+				if($account == "wlm") {
+					$html = $html.'<br /><p>If you are using Windows Live Messenger, please add our bot to your contacts list: '.$data['im_bot_username'].'.</p><br />';
+				}
+				if($account == "icq") {
+					$html = $html.'<br /><p>If you are going to use ICQ, please enter your ID number (example 1234567).</p><br />';	
+				}
+			}
+		}
+		
+		return $html;
 		
 	}
 

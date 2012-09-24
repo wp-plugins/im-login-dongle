@@ -1,41 +1,42 @@
 === Plugin Name ===
 Contributors: ZeroCool51
 Donate link: http://wpplugz.is-leet.com/
-Tags: login dongle, login security, two step verification, two step login, im login, two step im login, instant messenger login, google talk login, extra security, pin login, two step authentication, two factor authentication
+Tags: login dongle, login security, two step verification, two step verification, two step im login, instant messenger login, google talk login, extra security, pin login, two step authentication, two factor authentication
 Requires at least: 3.0
 Tested up to: 3.4.1
 Stable tag: 0.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-A simple wordpress plugin that adds two step verification via selected instant messenger.
+A simple plugin that adds two step verification via selected instant messenger.
 
 == Description ==
 
-This is a simple wordpress plugin that adds two step verification to the login. The beauty of it is, that no mobile phones are required, and pretty much anyone has an IM accout nowadays.
+This is a simple plugin that adds two step verification to the login. The beauty of it is, that no mobile phones are required, and pretty much anyone has an IM accout nowadays.
 
 How does it work?
 
-*   You create an IM account (currently google talk, icq and windows live messenger are supported)
-*   You add this account as the bot in the plugin settings page (this bot will be sending the login pin numbers to other users)
-*   Users themselves disable or enable this feature
+* You create an IM account (currently google talk, icq and windows live messenger are supported)
+* You add this account as the bot in the plugin settings page (this bot will be sending the login pin numbers to other users)
+* Users themselves disable or enable this feature
 
 How does the login work when activated?
 
-*   You login normally, if the credentials are correct,
-*   a pin code is sent to the IM account you select,
-*   you have 30 seconds to enter this pin code,
-*   if the code is correct, you are logged in else you are logged out
+* You login normally, if the credentials are correct,
+* you select the IM account you want to authorize with,
+* a pin code is sent to this IM account,
+* you have 30 seconds to enter this pin code,
+* if the code is correct, you are logged in else you are logged out
 
 What this plugin offers:
 
-*   Two step verification via IM accounts
-*   Enable or disable the two step verification
-*   Users themselves activate or disable this feature for them
-*   Reset feature if IM servers are down
-*   Customize PIN length
-*   Add a custom message to the IM
-*   Customize session time validity
+* Two step verification via IM accounts
+* Enable or disable the two step verification
+* Users themselves activate or disable this feature for them (unless you make it mandatory)
+* Reset feature if IM servers are down
+* Customize PIN length
+* Add a custom message to the IM
+* Customize session time validity
 
 == Installation ==
 
@@ -51,33 +52,37 @@ None at the moment.
 
 == Screenshots ==
 
-1. Plugin settings page #1, about
-2. Plugin settings page #2, general settings
-3. Plugin settings page #3, google bot settings
-4. Plugin settings page #4, reset keys
-5. Plugin settings page #5, data management
-6. User profile settings page (here each user can enable or disable the two step authentication themselves)
-7. When plugin is activated, login procedure #1
-8. When plugin is activated, login procedure #2 using Google Talk
-9. The disable screen for IM Login Dongle if IM servers are down
-10. Plugin settings page #6, ICQ bot settings
-11. Logging in using ICQ
+1. Normal Wordpress login
+2. Selecting IM of choice (to confirm your identity)
+3. Two step verification using Google Talk
+4. Two step verification using ICQ
+5. Two step verification using Windows Live Messenger
+6. Mandatory screen - if administrator chooses that two step verification is mandatory, users have to enter their IM accounts upon first login
+7. Disable IM login (if it is not mandatory and IM isn't working)
+8. Disable all IM bots (admin security feature)
+9. User profile settings page
+10. User profile settings page (if two step verification is mandatory)
+11. General settings page
+12. Google Talk Bot settings page
+13. Windows Live Messenger Bot settings page
+14. ICQ Bot settings page
+15. Reset keys settings page
+15. Data management settings page
 
 == Changelog ==
 
 = 1.0 =
-* Added ICQ support
-* Added Windows Live Messenger support
-* Added session manager in admin area
-* Added quick configuration option in menu (set-up all IM accounts in simple steps)
+* [New] Added ICQ support
+* [New] Added Windows Live Messenger support
+* [New] You can make the IM Login option mandatory for all users
 * Users can now add multiple IM accounts
 * Users can now choose the IM account they want to authorize with
 * Moved session clearer from data liberation to session manager
 * A lot of code rewritten and optimized
-* Added all settings cleaner to data liberation (also cleans plugin settings)
 * [Fix] Session time validity bug in settings (could accept all characters)
 * [Fix] Dongle key length bug in settings (could accept all characters)
-* [Fix] Users were able to access auth.php even if they're already logged in.
+* [Fix] Users were able to access auth.php even if they're already logged in
+* [Fix] You could enable the IM Login Dongle if none of the bots was configured yet
 
 = 0.3 =
 * Added disable codes for all users
@@ -103,9 +108,11 @@ Visit the [homepage](http://wpplugz.is-leet.com "homepage of im login dongle") o
 
 In the future all or some of these features might be added:
 
-* Maybe AIM someday?
-* Maybe Yahoo messenger someday?
-* Logs of logins
+* [100%] If exec is enabled, run all bots from the console (saves time and resources)
+* [100%] A quick config option
+* [100%] Session manager
+* [Maybe] AIM someday?
+* [Maybe] Yahoo messenger someday?
 
 What won't be added:
 

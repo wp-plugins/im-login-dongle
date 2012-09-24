@@ -14,7 +14,13 @@
 
 		if(is_user_logged_in_im_login_dongle($current_user->ID, $_COOKIE['dongle_login_id'])) {
 			wp_redirect(get_admin_url(), 301);
-			exit;
+		}
+		
+		if(isset($_GET['error2'])) {
+			$dongle_data = get_user_meta($current_user->ID, 'im_login_dongle_settings', true);
+			$cookie_id = $_COOKIE['dongle_login_id'];
+			unset($dongle_data[$cookie_id]);
+			update_usermeta($current_user->ID, 'im_login_dongle_data', $dongle_data);	
 		}
 		
 		$type = $_GET['type'];
@@ -47,6 +53,7 @@
 							wp_redirect($redirect_url, 301);						
 						}
 						else {
+							delete_dongle_code($current_user->ID, $id);
 							$redirect_url = plugin_dir_url(__FILE__).'disable.php?error';
 							wp_redirect($redirect_url, 301);
 						}
@@ -62,15 +69,22 @@
 												isPIDRunning($options['im_bots']['icq']['pid'])
 											);
 						$icqbot->connect();
-						$icqbot->sendMessage($dongle_code, 
+						$msg_sent = $icqbot->sendMessage($dongle_code, 
 												$_SERVER['REMOTE_ADDR'], 
 												$im_dongle_settings['custom_im_msg'], 
 												$im_dongle_settings['show_message'], 
 												$user_settings['im_accounts']['icq']['id']
 											);
 						$id = insert_dongle_code($current_user->ID, $dongle_code);
-						$redirect_url = plugin_dir_url(__FILE__).'cookie.php?dongle_id='.$id.'&set=true';
-						wp_redirect($redirect_url, 301);						
+						if($msg_sent) {
+							$redirect_url = plugin_dir_url(__FILE__).'cookie.php?dongle_id='.$id.'&set=true';
+							wp_redirect($redirect_url, 301);						
+						}
+						else {
+							delete_dongle_code($current_user->ID, $id);
+							$redirect_url = plugin_dir_url(__FILE__).'disable.php?error';
+							wp_redirect($redirect_url, 301);
+						}
 					
 					} break;
 				
@@ -92,6 +106,7 @@
 							wp_redirect($redirect_url, 301);						
 						}
 						else {
+							delete_dongle_code($current_user->ID, $id);
 							$redirect_url = plugin_dir_url(__FILE__).'disable.php?error';
 							wp_redirect($redirect_url, 301);
 						}
@@ -125,17 +140,20 @@
 
 
 			<form id="login_form" name="loginform"  action="" method="post">
-			<label for="user_login">
 			<?php 
 				$error = $_GET['error'];
-				if(!isset($error)) {
+				$error1 = $_GET['error1'];
+				$error2 = $_GET['error2'];
+				if(!isset($error) && !isset($error1) && !isset($error2)) {
 			?>	
-				<p>Welcome <?php echo $current_user->display_name ?>!</p><br /><p>No worries, you've logged in, just one more step and we're done!</p> <br /><p>Please choose a method to finalize your login.</p><br /></label>
+				<p>Welcome <?php echo $current_user->display_name; ?>!</p><br /><p>No worries, you've logged in, just one more step and we're done!</p> <br /><p>Please choose a method to finalize your login.</p><br /></label>
 			<?php 
 			
 				}
 				
 				else {
+					
+					if(isset($error)) {
 			
 			?>
             
@@ -143,6 +161,24 @@
             
             <?php
 			
+					}
+					else if(isset($error1)) {
+
+			?>
+            
+            		<p>The code you have entered was incorrect. Please try again.</p><br />
+            
+            <?php
+						
+					}
+					else if(isset($error2)) {
+			?>
+            
+            		<p>You have failed to enter the code in the time given (30 seconds). Please try again.</p><br />
+                    
+            <?php			
+					}
+						
 				}
 				
 			?>
@@ -152,14 +188,20 @@
 <?php 		if(current_user_can('manage_options')) {
 	
 ?>				
-			<br /><br /><label for='shutdown'><a href='<?php echo plugin_dir_url(__FILE__).'disable.php'; ?>'>Disable IM login?</a></label>
+			<?php 
+				$options = get_option('im_login_dongle_settings');
+				if(!$options['mandatory']) { ?>
+            <br /><br /><label for='shutdown'><a href='<?php echo plugin_dir_url(__FILE__).'disable.php'; ?>'>Disable IM login?</a></label>
+            <?php } ?>
 			<br /><br /><label for='shutdown'><a href='<?php echo plugin_dir_url(__FILE__).'shutdown.php'; ?>'>Disable IM login for all users?</a></label>
 
 <?php			
 			}
 			else {
 ?>
-			<br /><br /><label for='shutdown'><a href='<?php echo plugin_dir_url(__FILE__).'disable.php'; ?>'>Disable IM login?</a></label>
+			<?php if(!$options['mandatory']) { ?>
+            <br /><br /><label for='shutdown'><a href='<?php echo plugin_dir_url(__FILE__).'disable.php'; ?>'>Disable IM login?</a></label>
+            <?php } ?>
 <?php
 			}		
 ?>

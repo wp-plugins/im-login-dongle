@@ -36,7 +36,6 @@
 		
 		if(!$connect) {
 			$icq->disconnect();
-			kill_icq_bot();
 			exit;
 		}
 		else {
@@ -61,12 +60,21 @@
 				update_option('im_login_dongle_settings', $settings);
 				exit;
 			}
+			if(!$icq->is_connected()) {
+				$icq->disconnect();
+				$icq->connect($username, $password);
+			}
 			if(isset($icq_data['email']) && isset($icq_data['message'])) {
 				$send = $icq->send_message($icq_data['email'], $icq_data['message']);
+				if(!$send || !isset($icq)) {
+					$icq->disconnect();
+					$icq->connect($username, $password);
+					$icq->send_message($icq_data['email'], $icq_data['message']);
+				}
 			}
 			socket_write($client, $response);
 		}
 		
 	}
-
+	
 ?>
