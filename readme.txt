@@ -67,7 +67,7 @@ None at the moment.
 13. Windows Live Messenger Bot settings page
 14. ICQ Bot settings page
 15. Reset keys settings page
-15. Data management settings page
+16. Data management settings page
 
 == Changelog ==
 
