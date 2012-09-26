@@ -17,7 +17,9 @@
 				$plugin_options = get_option('im_login_dongle_settings');
 				$codes = $plugin_options['disable_code'];
 				if($codes['code1'] == $code1 && $codes['code2'] == $code2 && $codes['code3'] == $code3 && $codes['code4'] == $code4) {
-					$plugin_options['plugin_activated'] = false;
+					$plugin_options['im_bots']['icq']['activated'] = false; 
+					$plugin_options['im_bots']['gtalk']['activated'] = false; 
+					$plugin_options['im_bots']['wlm']['activated'] = false;
 					update_option('im_login_dongle_settings', $plugin_options);
 					wp_redirect(get_admin_url(), 301);
 				}
@@ -45,14 +47,15 @@
 
 
 			<form id="login_form" name="loginform"  action="" method="post">
-			<label for="user_login"><?php if(isset($_GET['error'])) { ?><p>There seems to be something wrong with the IM server. Please enter the reset keys to disable IM Login Dongle for all users. If you want to try again, click cancel and log in again.</p><br /><?php } else { ?><p>Please enter the reset keys to cancel IM Login Dongle for all users.</p><br /><?php } ?></label>
+			<?php if(isset($_GET['error'])) { ?><p>There seems to be something wrong with the IM servers.</p><br /><?php } else { ?><p>Please enter the reset keys that were given to you to disable all the IM bot accounts.</p><br /><?php } ?>
 			<label for="code1">Key 1<input class="input" type="text" name="code1" id="code1" /></label><br />
             <label for="code2">Key 2<input class="input" type="text" name="code2" id="code2" /></label><br />
             <label for="code3">Key 3<input class="input" type="text" name="code3" id="code3" /></label><br />
             <label for="code4">Key 4<input class="input" type="text" name="code4" id="code4" /></label><br />
             <input type="hidden" value="submitted" name="submitted" />
 			<p class="submit"><input type="submit" name="submit" tabindex="100" id="wp-submit" class="button-primary" value="Disable" tabindex="100" /></p>
-            <label for='cancel'><a href='<?php echo wp_logout_url(); ?>'>Cancel</a></label><br />
+            <label for='cancel'><a href='<?php echo plugin_dir_url(__FILE__).'dongle.php?cancel'; ?>'>Cancel</a></label><br /><br />
+            <label for='cancel'><a href='<?php echo plugin_dir_url(__FILE__).'dongle.php?logout'; ?>'>Logout?</a></label><br />
 			</form>
 			</div>
 			</body>

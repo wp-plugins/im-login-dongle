@@ -36,13 +36,12 @@
 		
 		if(!$connect) {
 			$icq->disconnect();
-			kill_icq_bot();
 			exit;
 		}
 		else {
 			$settings = get_option('im_login_dongle_settings');
 			$settings['im_bots']['icq']['running'] = true;
-			$settings['im_bots']['icq']['pid'] = ((string) (getmypid()));
+			$settings['bot_pid'] = ((string) (getmypid()));
 			update_option('im_login_dongle_settings', $settings);
 		}
 		
@@ -57,16 +56,25 @@
 			$icq_data = unserialize($input);
 			if(isset($icq_data['kill'])) {
 				$settings = get_option('im_login_dongle_settings');
-				$settings['im_bots']['icq']['pid'] = NULL;
+				$settings['bot_pid'] = NULL;
 				update_option('im_login_dongle_settings', $settings);
 				exit;
 			}
+			if(!$icq->is_connected()) {
+				$icq->disconnect();
+				$icq->connect($username, $password);
+			}
 			if(isset($icq_data['email']) && isset($icq_data['message'])) {
 				$send = $icq->send_message($icq_data['email'], $icq_data['message']);
+				if(!$send || !isset($icq)) {
+					$icq->disconnect();
+					$icq->connect($username, $password);
+					$icq->send_message($icq_data['email'], $icq_data['message']);
+				}
 			}
 			socket_write($client, $response);
 		}
 		
 	}
-
+	
 ?>
