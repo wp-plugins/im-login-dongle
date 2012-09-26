@@ -1,9 +1,5 @@
 <?php
 
-	$path = dirname(dirname(dirname(dirname(__FILE__))));
-	require_once('functions.php');
-	require_once($path.'/wp-load.php');
-
 	class ICQBot {
 	
 		private $username;
@@ -76,11 +72,8 @@
 		}
 		
 		public function killBot() {
-			$data = array('kill' => true);
-			$sent = sendDataToBot($data);
-			$options = get_option('im_login_dongle_settings');
-			$options['bot_pid'] = NULL;
-			update_option('im_login_dongle_settings', $options);
+			$data = serialize(array('kill' => true));
+			$sent = $this->sendDataToBot($data);
 		}
 		
 	}

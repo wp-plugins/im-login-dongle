@@ -4,7 +4,7 @@ Donate link: http://gum.co/im-login-dongle
 Tags: login dongle, login security, two step verification, two step verification, two step im login, instant messenger login, google talk login, extra security, pin login, two step authentication, two factor authentication
 Requires at least: 3.0
 Tested up to: 3.4.1
-Stable tag: 0.3
+Stable tag: 1.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -42,8 +42,8 @@ What this plugin offers:
 
 1. Upload the plugin directory to to the '/wp-content/plugins/' directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Create an instant messaging acount and add it in the plugin settings page
-4. Enable the plugin in the plugin settings page
+3. Create an instant messaging acount (all is explained in the menus of the plugin) and add it
+4. Enable the plugin in the 'General settings' page
 5. Go to your profile settings (Admin area->Users->Your profile), in the end edit the 'IM Dongle settings' section
 
 == Frequently Asked Questions ==
@@ -77,6 +77,8 @@ None at the moment.
 * [New] You can make the IM Login option mandatory for all users
 * Users can now add multiple IM accounts
 * Users can now choose the IM account they want to authorize with
+* Changed authentication mechanism
+* Automatic updater added
 * A lot of code rewritten and optimized
 * [Fix] Session time validity bug in settings (could accept all characters)
 * [Fix] Dongle key length bug in settings (could accept all characters)

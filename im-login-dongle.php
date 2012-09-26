@@ -93,9 +93,69 @@
 	// Write update procedure here
 	function im_login_dongle_update() {
 
+		// Lets update plugin data
 		$plugin_options = get_option('im_login_dongle_settings');
-		// TODO: Write update procedure
+		$updated_plugin_options = array(
+			'custom_im_msg' => $plugin_options['custom_im_msg'],
+			'version' => '1.0', // Plugin version
+			'plugin_activated' => $plugin_options['plugin_activated'], // Is plugin activated?
+			'encryption_salt' => $plugin_options['encryption_salt'], // The encryption salt string
+			'code_length' => $plugin_options['code_length'], // How long is the dongle code that is sent
+			'session_time' => (isset($plugin_options['session_time'])) ? $plugin_options['session_time'] : 60, // Session time validity in minutes
+			'show_message' => (isset($plugin_options['show_message']) && $plugin_options['show_message']) ? true : false,
+			'mandatory' => false,
+			'bot_pid' => NULL,
+			'im_bots' => array( // Because of future versions, a multiple array
+				'gtalk' => array(
+					'im_bot_username' => $plugin_options['im_bots']['gtalk']['im_bot_username'],
+					'im_bot_domain' => $plugin_options['im_bots']['gtalk']['im_bot_domain'],
+					'activated' => $plugin_options['im_bots']['gtalk']['activated'],
+					'im_bot_password' => $plugin_options['im_bots']['gtalk']['im_bot_password'],
+					'im_bot_name' => 'Google Talk'
+				),
+				'icq' => array(
+					'im_bot_username' => '',
+					'activated' => false,
+					'im_bot_password' => '',
+					'im_bot_name' => 'ICQ'
+				),
+				'wlm' => array(
+					'im_bot_username' => '',
+					'activated' => false,
+					'im_bot_password' => '',
+					'im_bot_name' => 'Windows Live Messenger'
+				)				
+			),
+			'disable_code' => array(
+				'code1' => $plugin_options['disable_code']['code1'],
+				'code2' => $plugin_options['disable_code']['code1'],
+				'code3' => $plugin_options['disable_code']['code1'],
+				'code4' => $plugin_options['disable_code']['code1']
+			)
+		);
+		
+		update_option('im_login_dongle_settings', $updated_plugin_options);
 
+		// Now lets update the user data
+		$blogusers = get_users();
+		foreach($blogusers as $user) {
+			$user_data = get_user_meta($user->ID, 'im_login_dongle_settings', true);
+			if(is_array($user_data)) {
+				$update = array();
+				$update['im_accounts']['gtalk']['id'] = $user_data['im_login_dongle_id'];
+				$update['im_accounts']['gtalk']['active'] = (strcmp($user_data['im_login_dongle_state'], "enabled") == 0 && strlen($user_data['im_login_dongle_id']) > 0) ? true : false;
+				$update['im_login_dongle_state'] = (strcmp($user_data['im_login_dongle_state'], "enabled") == 0) ? true : false;
+				if(isset($user_data['reset_keys']['key1'])) {
+					$update['reset_keys']['key1'] = $user_data['reset_keys']['key1'];
+					$update['reset_keys']['key2'] = $user_data['reset_keys']['key2'];
+					$update['reset_keys']['key3'] = $user_data['reset_keys']['key3'];
+					$update['reset_keys']['key4'] = $user_data['reset_keys']['key4'];						
+				}
+				update_user_meta($user->ID, 'im_login_dongle_settings', $update);
+				delete_user_meta($user->ID, 'im_login_dongle_data');
+			}
+		}		
+		
 	}
 	
 	// Clear the dongle cookie, delete the dongle id from the database
@@ -759,7 +819,7 @@
 
 	// The plugin admin page
 	function im_login_dongle_icqbot_settings() {
-		
+
 		$exec_enabled = is_exec_available();
 		
 		$message = "";
@@ -772,20 +832,30 @@
 			$pass = $_POST['icq_pass'];
 			$pass_cmp = $_POST['icq_pass_conf'];
 			$status = $_POST['icq_status'];
+			$shutdown = $_POST['icq_shutdown'];
+
+			if(isset($shutdown)) {
+				require_once('class.ICQBot.php');
+				$icqbot = new ICQBot("", "", true);
+				$icqbot->connect();
+				$icqbot->killBot();
+				$plugin_settings['bot_pid'] = NULL;
+				$message = $message."ICQ bot was successfully terminated. ";
+			}
 
 			if(isset($status)) { 
 				$status = true; 
 			} else { 
 				$status = false; 
 			}
-
+			
 			if(isset($pass) && isset($pass_cmp) && strlen($pass) > 0 && strlen($pass_cmp) > 0) {
 				if(strcmp($pass, $pass_cmp) == 0) {
 					$pass = encrypt($pass, $plugin_settings['encryption_salt']);
 					$plugin_settings['im_bots']['icq']['im_bot_password'] = $pass;
 				}
 				else {
-					$message = "Passwords for ICQ Bot account did not match.";	
+					$message = $message."Passwords for ICQ Bot account did not match. ";	
 				}
 			}
 			
@@ -799,7 +869,7 @@
 			$plugin_settings['im_bots']['icq']['activated'] = $status;
 			
 			update_option('im_login_dongle_settings', $plugin_settings);
-			$message = $message." ICQ Bot settings were successfully saved.";			
+			$message = $message." ICQ Bot settings were successfully saved. ";			
 			
 		}
 
@@ -852,11 +922,21 @@
 							<input name="icq_pass_conf" id="icq_pass_conf" type="password" /><br />
             				<span class="description">Account password.</span>
 						</td>
-					</tr>		
+					</tr>
+                    <?php if(isset($plugin_settings['bot_pid'])) { ?>
+					<tr>
+						<th scope="row"><label for="icq_shutdown">Shutdown bot</label></th>
+						<td>
+							<input type="checkbox" id="icq_shutdown" name="icq_shutdown" value="true" />
+							<br />
+            				<span class="description">The ICQ bot is currently running with PID number <?php echo $plugin_settings['bot_pid']; ?>. Enable this checkbox to shut it down.</span>
+						</td>
+					</tr>
+                    <?php } ?>	
 					<tr>
 						<th scope="row"><label for="icq_status">Dongle status</label></th>
 						<td>
-							<input type="checkbox" id="icq_status" id="icq_status" name="icq_status" value="true" 
+							<input type="checkbox" id="icq_status" name="icq_status" value="true" 
 							<?php if($plugin_settings['im_bots']['icq']['activated']) { ?>checked="checked"<?php } ?> />
 							<br />
             				<span class="description">Enable or disable the selected account.</span>
