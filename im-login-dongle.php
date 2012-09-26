@@ -56,6 +56,7 @@
 			'session_time' => 60, // Session time validity in minutes
 			'show_message' => false,
 			'mandatory' => false,
+			'bot_pid' => NULL,
 			'im_bots' => array( // Because of future versions, a multiple array
 				'gtalk' => array(
 					'im_bot_username' => '',
@@ -68,7 +69,6 @@
 					'im_bot_username' => '',
 					'activated' => false,
 					'im_bot_password' => '',
-					'pid' => NULL,
 					'im_bot_name' => 'ICQ'
 				),
 				'wlm' => array(
@@ -122,15 +122,9 @@
 
 		$dongle_status = $user_dongle_settings['im_login_dongle_state'];
 		
-		// If none of the bot accounts is active ...
-		if(!is_any_bot_account_active($plugin_options)) {
+		// If none of the bot accounts is active, or plugin deactivated or user has the dongle disabled and dongle is not mandatory, login successfull
+		if(!$plugin_options['plugin_activated'] || !is_any_bot_account_active($plugin_options) || (!$dongle_status && !$plugin_options['mandatory'])) {
 			return true;
-		}
-		if(!$plugin_options['plugin_activated']) {
-			return true;
-		}
-		if(!$dongle_status && !$plugin_options['mandatory']) {
-			return true;	
 		}
 		
 		$value = $_COOKIE['dongle_login_id'];
@@ -463,7 +457,7 @@
 						<td>
 							<input type="checkbox" name="show_message" id="show_message" value="true" <?php if($plugin_settings['show_message']) { ?>checked="checked"<?php } ?> />
 							<br />
-            				<span class="description">Enable or disable the "Powered by" message. If you decide to check it, thank you for supporting this plugin, if not, please consider a <a href="http://gum.co/im-login-dongle">donation</a><script type="text/javascript" src="https://gumroad.com/js/gumroad-button.js"></script><script type="text/javascript" src="https://gumroad.com/js/gumroad.js"></script>.</span>
+            				<span class="description">Enable or disable the "Powered by" message. If you decide to check it, thank you for supporting this plugin, if not, please consider a <a href="http://gum.co/im-login-dongle">donation</a><script type="text/javascript" src="https://gumroad.com/js/gumroad-button.js"></script><script type="text/javascript" src="https://gumroad.com/js/gumroad.js"></script>
 						</td>
 					</tr>		
 					<tr>

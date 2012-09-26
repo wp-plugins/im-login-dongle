@@ -41,7 +41,7 @@
 		else {
 			$settings = get_option('im_login_dongle_settings');
 			$settings['im_bots']['icq']['running'] = true;
-			$settings['im_bots']['icq']['pid'] = ((string) (getmypid()));
+			$settings['bot_pid'] = ((string) (getmypid()));
 			update_option('im_login_dongle_settings', $settings);
 		}
 		
@@ -56,7 +56,7 @@
 			$icq_data = unserialize($input);
 			if(isset($icq_data['kill'])) {
 				$settings = get_option('im_login_dongle_settings');
-				$settings['im_bots']['icq']['pid'] = NULL;
+				$settings['bot_pid'] = NULL;
 				update_option('im_login_dongle_settings', $settings);
 				exit;
 			}

@@ -39,7 +39,8 @@
 						$dongle_code = random_string($im_dongle_settings['code_length']);
 						$gbot = new GoogleTalkBot($im_dongle_settings['im_bots']['gtalk']['im_bot_username'], 
 													decrypt($im_dongle_settings['im_bots']['gtalk']['im_bot_password'], $im_dongle_settings['encryption_salt']),
-													$im_dongle_settings['im_bots']['gtalk']['im_bot_domain']);
+													$im_dongle_settings['im_bots']['gtalk']['im_bot_domain']
+													);
 						$gbot->connect();
 						$msg_sent = $gbot->sendMessage($dongle_code, 
 														$_SERVER['REMOTE_ADDR'], 
@@ -66,7 +67,7 @@
 						$dongle_code = random_string($im_dongle_settings['code_length']);
 						$icqbot = new ICQBot($im_dongle_settings['im_bots']['icq']['im_bot_username'], 
 												decrypt($im_dongle_settings['im_bots']['icq']['im_bot_password'], $im_dongle_settings['encryption_salt']),
-												isPIDRunning($options['im_bots']['icq']['pid'])
+												isPIDRunning($options['bot_pid'])
 											);
 						$icqbot->connect();
 						$msg_sent = $icqbot->sendMessage($dongle_code, 
@@ -82,6 +83,7 @@
 						}
 						else {
 							delete_dongle_code($current_user->ID, $id);
+							$icqbot->killBot();
 							$redirect_url = plugin_dir_url(__FILE__).'disable.php?error';
 							wp_redirect($redirect_url, 301);
 						}

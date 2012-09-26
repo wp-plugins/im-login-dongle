@@ -23,7 +23,7 @@
 			    $this->connection->connect();
 			    $this->connection->processUntil('session_start');
 	    		$this->connection->presence();
-				$this->connection_success = true;					
+				$this->connection_success = true;
 			} catch(XMPPHP_Exception $e) {
 				$this->connection_success = false;
 			}			

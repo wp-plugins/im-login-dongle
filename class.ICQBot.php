@@ -22,14 +22,14 @@
 				$this->connected = true;	
 			}
 			else {
-				$output = exec(sprintf('php icq_bot.php %s %s > /dev/null 2> /dev/null &', $this->username, $this->password));
+				$output = exec(sprintf('php console_bot.php %s %s > /dev/null 2> /dev/null &', $this->username, $this->password));
 				sleep(5);
 				$this->connected = true;				
 			}
 		}
 		
 		protected function sendDataToBot($ar_s) {
-			$data_sent = true;			
+			$data_sent = true;		
 			if($this->connected) {
 				if(!($sock = socket_create(AF_INET, SOCK_STREAM, 0))) {
 					$errorcode = socket_last_error();
@@ -79,7 +79,7 @@
 			$data = array('kill' => true);
 			$sent = sendDataToBot($data);
 			$options = get_option('im_login_dongle_settings');
-			$options['im_bots']['icq']['pid'] = NULL;
+			$options['bot_pid'] = NULL;
 			update_option('im_login_dongle_settings', $options);
 		}
 		

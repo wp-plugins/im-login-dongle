@@ -77,7 +77,6 @@ None at the moment.
 * [New] You can make the IM Login option mandatory for all users
 * Users can now add multiple IM accounts
 * Users can now choose the IM account they want to authorize with
-* Moved session clearer from data liberation to session manager
 * A lot of code rewritten and optimized
 * [Fix] Session time validity bug in settings (could accept all characters)
 * [Fix] Dongle key length bug in settings (could accept all characters)
@@ -108,7 +107,6 @@ Visit the [homepage](http://wpplugz.is-leet.com "homepage of im login dongle") o
 
 In the future all or some of these features might be added:
 
-* [100%] If exec is enabled, run all bots from the console (saves time and resources)
 * [100%] A quick config option
 * [100%] Session manager
 * [Maybe] AIM someday?
