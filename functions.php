@@ -3,7 +3,8 @@
 	require_once('class.GoogleTalkBot.php');
 	require_once('class.WLMBot.php');
 	require_once('class.ICQBot.php');
-	
+	require_once('lib/base32.php');
+
 	function encrypt($text, $salt) { 
     	return trim(base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $salt, $text, MCRYPT_MODE_ECB, mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB), MCRYPT_RAND))));
 	} 
@@ -218,7 +219,7 @@
 				if($dongle_data['im_accounts'][$account]['active']) {
 					$link = plugin_dir_url(__FILE__).'auth.php?type='.$account;
 					$image = plugin_dir_url(__FILE__).'images/'.$account.'.png';
-					$string = $string.' <a href="'.$link.'"><img src="'.$image.'" height="64px" width="64px" /></a>';
+					$string = $string.' <a href="'.$link.'" title="'.$settings['im_bots'][$account]['im_bot_name'].'"><img src="'.$image.'" height="64px" width="64px" alt="'.$settings['im_bots'][$account]['im_bot_name'].'" /></a>';
 				}
 			}
 		}
@@ -244,6 +245,50 @@
 		return false;
 		
 	}
+
+	/**
+	* Returns string of login options in auth.php
+	*
+	* @param String $secretkey
+	* @param int $code
+	*
+	*/
+	function verify_google_authenticator_code($secretkey, $code) {
+
+		$firstcount = -1;
+		$lastcount  =  1;
+
+		$tm = floor(time() / 30);
 	
+		$secretkey = Base32::decode($secretkey);
+		for ($i=$firstcount; $i<=$lastcount; $i++) {
+			$time=chr(0).chr(0).chr(0).chr(0).pack('N*',$tm+$i);
+			$hm = hash_hmac( 'SHA1', $time, $secretkey, true );
+			$offset = ord(substr($hm,-1)) & 0x0F;
+			$hashpart=substr($hm,$offset,4);
+			$value=unpack("N",$hashpart);
+			$value=$value[1];
+			$value = $value & 0x7FFFFFFF;
+			$value = $value % 1000000;
+			if($value == $code) {
+				return true;
+			}
+		}
+
+		return false;
+
+	}	
+
+	function create_google_authenticator_code() {
+
+		$chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+		$secret = '';
+		for($i=0; $i<16; $i++) {
+			$secret .= substr($chars, rand(0, strlen($chars) - 1), 1);
+		}
+
+		return $secret;
+
+	}
 	
 ?>

@@ -4,7 +4,7 @@
 		Plugin Name: IM Login Dongle
 		Plugin URI: http://wpplugz.is-leet.com
 		Description: A simple plugin that adds two step verification via selected instant messenger.
-		Version: 1.0
+		Version: 1.1
 		Author: Bostjan Cigan
 		Author URI: http://bostjan.gets-it.net
 		License: GPL v2
@@ -29,7 +29,7 @@
 	}
 
 	// Check if we will be updating the database	
-	if($plugin_options['version'] == "0.1" || $plugin_options['version'] == "0.3") {
+	if(((int) $plugin_options['version']) < 1.1) {
 		im_login_dongle_update();	
 	}
 	
@@ -49,7 +49,7 @@
 		
 		$plugin_options = array(
 			'custom_im_msg' => '',
-			'version' => '1.0', // Plugin version
+			'version' => '1.1', // Plugin version
 			'plugin_activated' => false, // Is plugin activated?
 			'encryption_salt' => random_string(60), // The encryption salt string
 			'code_length' => 6, // How long is the dongle code that is sent
@@ -76,7 +76,11 @@
 					'activated' => false,
 					'im_bot_password' => '',
 					'im_bot_name' => 'Windows Live Messenger'
-				)				
+				),
+				'gauth' => array(
+					'activated' => true,
+					'im_bot_name' => 'Google Authenticator'
+				)
 			),
 			'disable_code' => array(
 				'code1' => random_string(15),
@@ -97,14 +101,14 @@
 		$plugin_options = get_option('im_login_dongle_settings');
 		$updated_plugin_options = array(
 			'custom_im_msg' => $plugin_options['custom_im_msg'],
-			'version' => '1.0', // Plugin version
+			'version' => '1.1', // Plugin version
 			'plugin_activated' => $plugin_options['plugin_activated'], // Is plugin activated?
 			'encryption_salt' => $plugin_options['encryption_salt'], // The encryption salt string
 			'code_length' => $plugin_options['code_length'], // How long is the dongle code that is sent
 			'session_time' => (isset($plugin_options['session_time'])) ? $plugin_options['session_time'] : 60, // Session time validity in minutes
 			'show_message' => (isset($plugin_options['show_message']) && $plugin_options['show_message']) ? true : false,
-			'mandatory' => false,
-			'bot_pid' => NULL,
+			'mandatory' => (isset($plugin_options['mandatory'])) ? $plugin_options['mandatory'] : false,
+			'bot_pid' => (isset($plugin_options['bot_pid'])) ? $plugin_options['bot_pid'] : NULL,
 			'im_bots' => array( // Because of future versions, a multiple array
 				'gtalk' => array(
 					'im_bot_username' => $plugin_options['im_bots']['gtalk']['im_bot_username'],
@@ -114,17 +118,21 @@
 					'im_bot_name' => 'Google Talk'
 				),
 				'icq' => array(
-					'im_bot_username' => '',
-					'activated' => false,
-					'im_bot_password' => '',
+					'im_bot_username' => (isset($plugin_options['im_bots']['icq']['im_bot_username'])) ? $plugin_options['im_bots']['icq']['im_bot_username'] : '',
+					'activated' => (isset($plugin_options['im_bots']['icq']['activated'])) ? $plugin_options['im_bots']['icq']['activated'] : false,
+					'im_bot_password' => (isset($plugin_options['im_bots']['icq']['im_bot_password'])) ? $plugin_options['im_bots']['icq']['im_bot_password'] : '',
 					'im_bot_name' => 'ICQ'
 				),
 				'wlm' => array(
-					'im_bot_username' => '',
-					'activated' => false,
-					'im_bot_password' => '',
+					'im_bot_username' => (isset($plugin_options['im_bots']['wlm']['im_bot_username'])) ? $plugin_options['im_bots']['wlm']['im_bot_username'] : '',
+					'activated' => (isset($plugin_options['im_bots']['wlm']['activated'])) ? $plugin_options['im_bots']['wlm']['activated'] : false,
+					'im_bot_password' => (isset($plugin_options['im_bots']['wlm']['im_bot_password'])) ? $plugin_options['im_bots']['wlm']['im_bot_password'] : '',
 					'im_bot_name' => 'Windows Live Messenger'
-				)				
+				),
+				'gauth' => array(
+					'activated' => true,
+					'im_bot_name' => 'Google Authenticator'
+				)
 			),
 			'disable_code' => array(
 				'code1' => $plugin_options['disable_code']['code1'],
@@ -137,22 +145,24 @@
 		update_option('im_login_dongle_settings', $updated_plugin_options);
 
 		// Now lets update the user data
-		$blogusers = get_users();
-		foreach($blogusers as $user) {
-			$user_data = get_user_meta($user->ID, 'im_login_dongle_settings', true);
-			if(is_array($user_data)) {
-				$update = array();
-				$update['im_accounts']['gtalk']['id'] = $user_data['im_login_dongle_id'];
-				$update['im_accounts']['gtalk']['active'] = (strcmp($user_data['im_login_dongle_state'], "enabled") == 0 && strlen($user_data['im_login_dongle_id']) > 0) ? true : false;
-				$update['im_login_dongle_state'] = (strcmp($user_data['im_login_dongle_state'], "enabled") == 0) ? true : false;
-				if(isset($user_data['reset_keys']['key1'])) {
-					$update['reset_keys']['key1'] = $user_data['reset_keys']['key1'];
-					$update['reset_keys']['key2'] = $user_data['reset_keys']['key2'];
-					$update['reset_keys']['key3'] = $user_data['reset_keys']['key3'];
-					$update['reset_keys']['key4'] = $user_data['reset_keys']['key4'];						
+		if(((int) $plugin_options['version']) < 1.0) {
+			$blogusers = get_users();
+			foreach($blogusers as $user) {
+				$user_data = get_user_meta($user->ID, 'im_login_dongle_settings', true);
+				if(is_array($user_data)) {
+					$update = array();
+					$update['im_accounts']['gtalk']['id'] = $user_data['im_login_dongle_id'];
+					$update['im_accounts']['gtalk']['active'] = (strcmp($user_data['im_login_dongle_state'], "enabled") == 0 && strlen($user_data['im_login_dongle_id']) > 0) ? true : false;
+					$update['im_login_dongle_state'] = (strcmp($user_data['im_login_dongle_state'], "enabled") == 0) ? true : false;
+					if(isset($user_data['reset_keys']['key1'])) {
+						$update['reset_keys']['key1'] = $user_data['reset_keys']['key1'];
+						$update['reset_keys']['key2'] = $user_data['reset_keys']['key2'];
+						$update['reset_keys']['key3'] = $user_data['reset_keys']['key3'];
+						$update['reset_keys']['key4'] = $user_data['reset_keys']['key4'];						
+					}
+					update_user_meta($user->ID, 'im_login_dongle_settings', $update);
+					delete_user_meta($user->ID, 'im_login_dongle_data');
 				}
-				update_user_meta($user->ID, 'im_login_dongle_settings', $update);
-				delete_user_meta($user->ID, 'im_login_dongle_data');
 			}
 		}		
 		
@@ -272,6 +282,41 @@
 				</td>
 			</tr>
         	<?php } ?>
+            <?php if($options['im_bots']['gauth']['activated']) { ?>
+			<tr>
+				<th scope="row"><label for="im_login_dongle_gauth">Google Authenticator</label></th>
+				<td>
+					<?php
+						$gauth_key = $dongle_settings['im_accounts']['gauth']['key'];
+						$gauth_key = (strlen($gauth_key) > 0) ? $gauth_key : create_google_authenticator_code();
+						$blog_title = get_bloginfo('name');
+						$url_encoded = urlencode("otpauth://totp/{$blog_title}?secret={$gauth_key}");
+						$qr_code_image_url = "https://chart.googleapis.com/chart?cht=qr&amp;chs=300x300&amp;chld=H|0&amp;chl={$url_encoded}";
+					?>
+					<input type="text" name="im_login_dongle_gauth" id="im_login_dongle_gauth" value="<?php echo esc_attr($gauth_key); ?>" readonly="readonly" class="regular-text" /><br />
+					<img id="im_login_dongle_gauth_qr" src="<?php echo $qr_code_image_url; ?>" /><br />
+					<span class="description">Please scan the QR code with the Google Authenticator app on your phone. You can create a new code by marking the regenerate code checkbox.</span>
+					
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="im_login_dongle_gauth_regenerate">Regenerate Google Authenticator code</label></th>
+				<td>
+					<input name="im_login_dongle_gauth_regenerate" id="im_login_gauth_regenerate" type="checkbox" />
+					<br />
+                    <span class="description">If you want to regenerate the Google Authenticator code, check this box and update.</span>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="im_login_dongle_gauth_enable">Enable Google Authenticator</label></th>
+				<td>
+					<input name="im_login_dongle_gauth_enable" id="im_login_gauth_enable" type="checkbox" <?php if($dongle_settings['im_accounts']['gauth']['active']) { ?> checked="checked" <?php } ?>/>
+					<br />
+                    <span class="description">If you want to enable Google Authenticator, check this box.</span>
+				</td>
+			</tr>
+            <?php } ?>
+
             <?php if($options['im_bots']['wlm']['activated']) { ?>
 			<tr>
 				<th scope="row"><label for="im_login_dongle_wlm">Windows Live Messenger ID</label></th>
@@ -353,20 +398,13 @@
 		$gtalk = $_POST['im_login_dongle_gtalk'];
 		$wlm = $_POST['im_login_dongle_wlm'];
 		$icq = $_POST['im_login_dongle_icq'];
-		$gtalk_resend_request = false;
-		$wlm_resend_request = false;
-		$reset_keys = false;
-		
-		if(isset($_POST['im_login_dongle_gtalk_resend'])) {
-			$gtalk_resend_request = true;	
-		}
-		if(isset($_POST['im_login_dongle_regenerate'])) {
-			$reset_keys = true;	
-		}
-		if(isset($_POST['im_login_dongle_wlm_resend'])) {
-			$wlm_resend_request = true;	
-		}
-				
+		$gtalk_resend_request = (isset($_POST['im_login_dongle_gtalk_resend'])) ? true : false;
+		$wlm_resend_request = (isset($_POST['im_login_dongle_wlm_resend'])) ? true : false;
+		$reset_keys = (isset($_POST['im_login_dongle_regenerate'])) ? true : false;
+		$gauth_enable = (isset($_POST['im_login_dongle_gauth_enable'])) ? true : false;
+		$gauth_key = $_POST['im_login_dongle_gauth'];
+		$gauth_regenerate = (isset($_POST['im_login_dongle_gauth_regenerate'])) ? true : false;
+						
 		if(current_user_can('edit_user', $user_id)) {
 			// If regenerate reset keys was marked, generate new reset keys
 			if($reset_keys) {
@@ -400,6 +438,8 @@
 			$dongle_settings['im_accounts']['gtalk']['active'] = (strlen($gtalk) > 0) ? true : false;
 			$dongle_settings['im_accounts']['wlm']['active'] = (strlen($wlm) > 0) ? true : false;
 			$dongle_settings['im_accounts']['icq']['active'] = (strlen($icq) > 0) ? true : false;
+			$dongle_settings['im_accounts']['gauth']['active'] = $gauth_enable;
+			$dongle_settings['im_accounts']['gauth']['key'] = ($gauth_regenerate) ? create_google_authenticator_code() : $gauth_key;
 			
 		}
 			
@@ -423,7 +463,7 @@
 			$msg = html_entity_decode($_POST['custom_msg']);
 			$code_len = $_POST['code_length'];
 			$status = $_POST['dongle_status'];
-			$session_time = $_POST['session_time'];
+			$session_time = (int) ($_POST['session_time']);
 			$msg_show = $_POST['show_message'];
 			$mandatory = $_POST['mandatory'];
 			
@@ -435,7 +475,7 @@
 			$plugin_settings['code_length'] = (is_int($code_len)) ? $code_len : $plugin_settings['code_length'];
 			$plugin_settings['custom_im_msg'] = $msg;
 			$plugin_settings['plugin_activated'] = ($is_active) ? $status : false;
-			$plugin_settings['session_time'] = (is_int($session_time)) ? $session_time : $plugin_settings['session_time'];
+			$plugin_settings['session_time'] = (is_int($session_time) && $session_time > 1) ? $session_time : $plugin_settings['session_time'];
 			$plugin_settings['show_message'] = $msg_show;
 			$plugin_settings['mandatory'] = (isset($mandatory) && $is_active) ? $mandatory : false;
 			

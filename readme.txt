@@ -23,14 +23,14 @@ How does it work?
 How does the login work when activated?
 
 * You login normally, if the credentials are correct,
-* you select the IM account you want to authorize with,
-* a pin code is sent to this IM account,
+* you select the account you want to authorize with,
+* a pin code is sent to this account (or you use the Google Authenticator code),
 * you have 30 seconds to enter this pin code,
 * if the code is correct, you are logged in else you are logged out
 
 What this plugin offers:
 
-* Two step verification via IM accounts
+* Two step verification via IM accounts or Google Authenticator
 * Enable or disable the two step verification
 * Users themselves activate or disable this feature for them (unless you make it mandatory)
 * Reset feature if IM servers are down
@@ -57,19 +57,26 @@ None at the moment.
 3. Two step verification using Google Talk
 4. Two step verification using ICQ
 5. Two step verification using Windows Live Messenger
-6. Mandatory screen - if administrator chooses that two step verification is mandatory, users have to enter their IM accounts upon first login
-7. Disable IM login (if it is not mandatory and IM isn't working)
-8. Disable all IM bots (admin security feature)
-9. User profile settings page
-10. User profile settings page (if two step verification is mandatory)
-11. General settings page
-12. Google Talk Bot settings page
-13. Windows Live Messenger Bot settings page
-14. ICQ Bot settings page
-15. Reset keys settings page
-16. Data management settings page
+6. Two step verification using Google Authenticator
+7. Mandatory screen - if administrator chooses that two step verification is mandatory, users have to enter their IM accounts upon first login
+8. Disable IM login (if it is not mandatory and IM isn't working)
+9. Disable all IM bots (admin security feature)
+10. User profile settings page
+11. User profile settings page (if two step verification is mandatory)
+12. General settings page
+13. Google Talk Bot settings page
+14. Windows Live Messenger Bot settings page
+15. ICQ Bot settings page
+16. Reset keys settings page
+17. Data management settings page
 
 == Changelog ==
+
+= 1.1 =
+* [New] Added session manager (logout any user from anywhere)
+* [New] Added new login option - Google Authenticator
+* [Fix] Now we clear all sessions from the database that have expired when user logs in
+* [Fix] Session time settings bug - sometimes it wouldn't update the value
 
 = 1.0 =
 * [New] Added ICQ support
@@ -110,7 +117,6 @@ Visit the [homepage](http://wpplugz.is-leet.com "homepage of im login dongle") o
 In the future all or some of these features might be added:
 
 * [100%] A quick config option
-* [100%] Session manager
 * [Maybe] AIM someday?
 * [Maybe] Yahoo messenger someday?
 

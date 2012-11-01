@@ -11,6 +11,18 @@
 
 		global $current_user;
 		get_currentuserinfo();
+		
+		$options = get_option('im_login_dongle_settings');
+		$sessions_in_db = get_user_meta($current_user->ID, 'im_login_dongle_data', true);
+		if(is_array($sessions_in_db)) {
+			foreach($sessions_in_db as $session_id => $data) {
+				if(time() - $data['timestamp'] > $options['session_time'] * 60) {
+					unset($sessions_in_db[$session_id]);
+				}
+			}
+			update_usermeta($current_user->ID, 'im_login_dongle_data', $sessions_in_db);
+		}
+		
 
 		if(is_user_logged_in_im_login_dongle($current_user->ID, $_COOKIE['dongle_login_id'])) {
 			wp_redirect(get_admin_url(), 301);
@@ -114,6 +126,15 @@
 						}
 
 					} break;
+					
+					case "gauth": {
+
+						$dongle_code = random_string($im_dongle_settings['code_length']);
+						$id = insert_dongle_code($current_user->ID, $dongle_code);
+						$redirect_url = plugin_dir_url(__FILE__).'cookie.php?dongle_id='.$id.'&set=true&type=gauth';
+						wp_redirect($redirect_url, 301);						
+
+					}
 				
 				}
 				
