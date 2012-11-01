@@ -1,7 +1,7 @@
 === Plugin Name ===
 Contributors: ZeroCool51
 Donate link: http://gum.co/im-login-dongle
-Tags: login dongle, login security, two step verification, two step verification, two step im login, instant messenger login, google talk login, extra security, pin login, two step authentication, two factor authentication
+Tags: login dongle, login security, two step verification, two step verification, two step im login, instant messenger login, google talk login, extra security, pin login, two step authentication, two factor authentication, google authenticator
 Requires at least: 3.0
 Tested up to: 3.4.1
 Stable tag: 1.0
