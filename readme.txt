@@ -70,6 +70,7 @@ None at the moment.
 16. Reset keys settings page
 17. Data management settings page
 18. Session management settings page
+19. Google Authenticator settings page
 
 == Changelog ==
 
