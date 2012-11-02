@@ -19,7 +19,10 @@
 		$plugin_options = get_option('im_login_dongle_settings');
 	
 		if(isset($dongle_id) && isset($set)) {
-			$redirect_url = plugin_dir_url(__FILE__).'dongle.php?id='.$dongle_id;
+			$redirect_url = plugin_dir_url(__FILE__).'dongle.php';
+			if($_GET['type'] == "gauth") {
+				$redirect_url = plugin_dir_url(__FILE__).'gauth.php';
+			}
 			header("Location: $redirect_url");
 			setcookie("dongle_login_id", $dongle_id, time()+($plugin_options['session_time']*60), "/");
 		    exit();

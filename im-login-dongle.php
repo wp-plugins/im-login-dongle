@@ -3,8 +3,8 @@
 	/* 
 		Plugin Name: IM Login Dongle
 		Plugin URI: http://wpplugz.is-leet.com
-		Description: A simple plugin that adds two way authentication via selected instant messenger.
-		Version: 1.0
+		Description: A simple plugin that adds two step verification via selected instant messenger.
+		Version: 1.1
 		Author: Bostjan Cigan
 		Author URI: http://bostjan.gets-it.net
 		License: GPL v2
@@ -29,7 +29,7 @@
 	}
 
 	// Check if we will be updating the database	
-	if($plugin_options['version'] == "0.1" || $plugin_options['version'] == "0.3") {
+	if(((float) $plugin_options['version']) < 1.1) {
 		im_login_dongle_update();	
 	}
 	
@@ -41,38 +41,49 @@
 		add_submenu_page('im-login-dongle', 'Google Talk Bot', 'Google Talk Bot', 'administrator', 'im-login-dongle-gbot', 'im_login_dongle_gbot_settings');
 		add_submenu_page('im-login-dongle', 'Windows Live Messenger Bot', 'Windows Live Messenger Bot', 'administrator', 'im-login-dongle-wlm', 'im_login_dongle_wlmbot_settings');
 		add_submenu_page('im-login-dongle', 'ICQ Bot', 'ICQ Bot', 'administrator', 'im-login-dongle-icqbot', 'im_login_dongle_icqbot_settings');
+		add_submenu_page('im-login-dongle', 'Google Authenticator', 'Google Authenticator', 'administrator', 'im-login-dongle-gauth', 'im_login_dongle_gauth_settings');
+		add_submenu_page('im-login-dongle', 'Session manager', 'Session Manager', 'administrator', 'im-login-dongle-session-manager', 'im_login_dongle_session_manager');
 		add_submenu_page('im-login-dongle', 'Reset keys', 'Reset keys', 'administrator', 'im-login-dongle-codes', 'im_login_dongle_codes_settings');
 		add_submenu_page('im-login-dongle', 'Data liberation', 'Data liberation', 'administrator', 'im-login-dongle-data-liberation', 'im_login_dongle_data_liberation_settings');
 	}
-
+	
 	function im_login_dongle_install() {
 		
 		$plugin_options = array(
 			'custom_im_msg' => '',
-			'version' => '1.0', // Plugin version
+			'version' => '1.1', // Plugin version
 			'plugin_activated' => false, // Is plugin activated?
 			'encryption_salt' => random_string(60), // The encryption salt string
 			'code_length' => 6, // How long is the dongle code that is sent
 			'session_time' => 60, // Session time validity in minutes
 			'show_message' => false,
+			'mandatory' => false,
+			'bot_pid' => NULL,
 			'im_bots' => array( // Because of future versions, a multiple array
 				'gtalk' => array(
 					'im_bot_username' => '',
 					'im_bot_domain' => '',
 					'activated' => false,
-					'im_bot_password' => ''
+					'im_bot_password' => '',
+					'im_bot_name' => 'Google Talk'
 				),
 				'icq' => array(
 					'im_bot_username' => '',
 					'activated' => false,
 					'im_bot_password' => '',
-					'pid' => NULL
+					'im_bot_name' => 'ICQ'
 				),
 				'wlm' => array(
 					'im_bot_username' => '',
 					'activated' => false,
-					'im_bot_password' => ''
-				)				
+					'im_bot_password' => '',
+					'im_bot_name' => 'Windows Live Messenger'
+				),
+				'gauth' => array(
+					'activated' => true,
+					'im_bot_name' => 'Google Authenticator',
+					'seed_length' => 32
+				)
 			),
 			'disable_code' => array(
 				'code1' => random_string(15),
@@ -89,9 +100,76 @@
 	// Write update procedure here
 	function im_login_dongle_update() {
 
+		// Lets update plugin data
 		$plugin_options = get_option('im_login_dongle_settings');
-		// TODO: Write update procedure
+		$updated_plugin_options = array(
+			'custom_im_msg' => $plugin_options['custom_im_msg'],
+			'version' => '1.1', // Plugin version
+			'plugin_activated' => $plugin_options['plugin_activated'], // Is plugin activated?
+			'encryption_salt' => $plugin_options['encryption_salt'], // The encryption salt string
+			'code_length' => $plugin_options['code_length'], // How long is the dongle code that is sent
+			'session_time' => (isset($plugin_options['session_time'])) ? $plugin_options['session_time'] : 60, // Session time validity in minutes
+			'show_message' => (isset($plugin_options['show_message']) && $plugin_options['show_message']) ? true : false,
+			'mandatory' => (isset($plugin_options['mandatory'])) ? $plugin_options['mandatory'] : false,
+			'bot_pid' => (isset($plugin_options['bot_pid'])) ? $plugin_options['bot_pid'] : NULL,
+			'im_bots' => array( // Because of future versions, a multiple array
+				'gtalk' => array(
+					'im_bot_username' => $plugin_options['im_bots']['gtalk']['im_bot_username'],
+					'im_bot_domain' => $plugin_options['im_bots']['gtalk']['im_bot_domain'],
+					'activated' => $plugin_options['im_bots']['gtalk']['activated'],
+					'im_bot_password' => $plugin_options['im_bots']['gtalk']['im_bot_password'],
+					'im_bot_name' => 'Google Talk'
+				),
+				'icq' => array(
+					'im_bot_username' => (isset($plugin_options['im_bots']['icq']['im_bot_username'])) ? $plugin_options['im_bots']['icq']['im_bot_username'] : '',
+					'activated' => (isset($plugin_options['im_bots']['icq']['activated'])) ? $plugin_options['im_bots']['icq']['activated'] : false,
+					'im_bot_password' => (isset($plugin_options['im_bots']['icq']['im_bot_password'])) ? $plugin_options['im_bots']['icq']['im_bot_password'] : '',
+					'im_bot_name' => 'ICQ'
+				),
+				'wlm' => array(
+					'im_bot_username' => (isset($plugin_options['im_bots']['wlm']['im_bot_username'])) ? $plugin_options['im_bots']['wlm']['im_bot_username'] : '',
+					'activated' => (isset($plugin_options['im_bots']['wlm']['activated'])) ? $plugin_options['im_bots']['wlm']['activated'] : false,
+					'im_bot_password' => (isset($plugin_options['im_bots']['wlm']['im_bot_password'])) ? $plugin_options['im_bots']['wlm']['im_bot_password'] : '',
+					'im_bot_name' => 'Windows Live Messenger'
+				),
+				'gauth' => array(
+					'activated' => true,
+					'im_bot_name' => 'Google Authenticator',
+					'seed_length' => 32
+				)
+			),
+			'disable_code' => array(
+				'code1' => $plugin_options['disable_code']['code1'],
+				'code2' => $plugin_options['disable_code']['code1'],
+				'code3' => $plugin_options['disable_code']['code1'],
+				'code4' => $plugin_options['disable_code']['code1']
+			)
+		);
+		
+		update_option('im_login_dongle_settings', $updated_plugin_options);
 
+		// Now lets update the user data
+		if(((float) $plugin_options['version']) < 1.0) {
+			$blogusers = get_users();
+			foreach($blogusers as $user) {
+				$user_data = get_user_meta($user->ID, 'im_login_dongle_settings', true);
+				if(is_array($user_data)) {
+					$update = array();
+					$update['im_accounts']['gtalk']['id'] = $user_data['im_login_dongle_id'];
+					$update['im_accounts']['gtalk']['active'] = (strcmp($user_data['im_login_dongle_state'], "enabled") == 0 && strlen($user_data['im_login_dongle_id']) > 0) ? true : false;
+					$update['im_login_dongle_state'] = (strcmp($user_data['im_login_dongle_state'], "enabled") == 0) ? true : false;
+					if(isset($user_data['reset_keys']['key1'])) {
+						$update['reset_keys']['key1'] = $user_data['reset_keys']['key1'];
+						$update['reset_keys']['key2'] = $user_data['reset_keys']['key2'];
+						$update['reset_keys']['key3'] = $user_data['reset_keys']['key3'];
+						$update['reset_keys']['key4'] = $user_data['reset_keys']['key4'];						
+					}
+					update_user_meta($user->ID, 'im_login_dongle_settings', $update);
+					delete_user_meta($user->ID, 'im_login_dongle_data');
+				}
+			}
+		}		
+		
 	}
 	
 	// Clear the dongle cookie, delete the dongle id from the database
@@ -105,7 +183,6 @@
 			update_user_meta($current_user->ID, 'im_login_dongle_data', $dongle_data);			
 		}
 		setcookie("dongle_login_id", "", time()-3600*24, "/");
-		wp_redirect(home_url('/wp-login.php'), 301);	
 	}
 	
 	// Check if user has authorized with dongle
@@ -119,13 +196,21 @@
 
 		$dongle_status = $user_dongle_settings['im_login_dongle_state'];
 		
-		// If dongle is not activated or the user doesn't have an activated dongle or any bot accounts that the user has aren't available, then
-		// authenticate user successfully
-		if(!$dongle_status || !$plugin_options['plugin_activated'] || !check_if_any_bot_for_user_active($current_user->ID)) {
+		// If none of the bot accounts is active, or plugin deactivated or user has the dongle disabled and dongle is not mandatory, login successfull
+		if(!$plugin_options['plugin_activated'] || !is_any_bot_account_active($plugin_options) || (!$dongle_status && !$plugin_options['mandatory'])) {
 			return true;
 		}
+		
+		$value = $_COOKIE['dongle_login_id'];
+		// If the IM authorization is mandatory and user hasn't entered any data, redirect to data page
+		if($plugin_options['mandatory'] && !user_has_im_account($current_user->ID)) {
+			if(!is_any_bot_account_active($plugin_options)) {
+				return true;	
+			}
+			$redirect_url = plugin_dir_url(__FILE__).'im_set.php';				
+			wp_redirect($redirect_url, 301);
+		}
 		else {
-			$value = $_COOKIE['dongle_login_id'];
 			if(!isset($value)) {
 				$redirect_url = plugin_dir_url(__FILE__).'auth.php';				
 				wp_redirect($redirect_url, 301);
@@ -138,9 +223,8 @@
 				else {
 					wp_logout();
 				}
-			}
-		}
-		
+			}		
+		}		
 	}
 		
 	// Everything down here is all settings
@@ -154,6 +238,7 @@
 ?>
 		<h3>IM Login Dongle</h3>
 		<table class="form-table">
+        <?php if(!$options['mandatory']) { ?>
 			<tr>
 				<th scope="row"><label for="im_login_dongle_enabled">Activate dongle</label></th>
 
@@ -183,6 +268,7 @@
                     <span class="description">Enable or disable two step verification.</span>
 				</td>
 			</tr>
+<?php } ?>
             <?php if($options['im_bots']['gtalk']['activated']) { ?>		
 			<tr>
 				<th scope="row"><label for="im_login_dongle_gtalk">Google Talk ID</label></th>
@@ -200,6 +286,41 @@
 				</td>
 			</tr>
         	<?php } ?>
+            <?php if($options['im_bots']['gauth']['activated']) { ?>
+			<tr>
+				<th scope="row"><label for="im_login_dongle_gauth">Google Authenticator</label></th>
+				<td>
+					<?php
+						$gauth_key = $dongle_settings['im_accounts']['gauth']['key'];
+						$gauth_key = (strlen($gauth_key) > 0) ? $gauth_key : create_google_authenticator_code();
+						$blog_title = get_bloginfo('name');
+						$url_encoded = urlencode("otpauth://totp/{$blog_title}?secret={$gauth_key}");
+						$qr_code_image_url = "https://chart.googleapis.com/chart?cht=qr&amp;chs=300x300&amp;chld=H|0&amp;chl={$url_encoded}";
+					?>
+					<input type="text" name="im_login_dongle_gauth" id="im_login_dongle_gauth" value="<?php echo esc_attr($gauth_key); ?>" readonly="readonly" class="regular-text" /><br />
+					<img id="im_login_dongle_gauth_qr" src="<?php echo $qr_code_image_url; ?>" /><br />
+					<span class="description">Please scan the QR code with the Google Authenticator app on your phone. You can create a new code by marking the regenerate code checkbox.</span>
+					
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="im_login_dongle_gauth_regenerate">Regenerate Google Authenticator code</label></th>
+				<td>
+					<input name="im_login_dongle_gauth_regenerate" id="im_login_gauth_regenerate" type="checkbox" />
+					<br />
+                    <span class="description">If you want to regenerate the Google Authenticator code, check this box and update.</span>
+				</td>
+			</tr>
+			<tr>
+				<th scope="row"><label for="im_login_dongle_gauth_enable">Enable Google Authenticator</label></th>
+				<td>
+					<input name="im_login_dongle_gauth_enable" id="im_login_gauth_enable" type="checkbox" <?php if($dongle_settings['im_accounts']['gauth']['active']) { ?> checked="checked" <?php } ?>/>
+					<br />
+                    <span class="description">If you want to enable Google Authenticator, check this box.</span>
+				</td>
+			</tr>
+            <?php } ?>
+
             <?php if($options['im_bots']['wlm']['activated']) { ?>
 			<tr>
 				<th scope="row"><label for="im_login_dongle_wlm">Windows Live Messenger ID</label></th>
@@ -225,7 +346,11 @@
 					<span class="description">Please enter your ICQ ID (example: 123456789).</span>
 				</td>
 			</tr>
-            <?php } ?>      
+            <?php } ?>
+			
+			<?php	if(!$options['mandatory']) {
+			
+			?>      
 			<tr>
 				<th scope="row"><label for="im_login_dongle_codes">Disable codes</label></th>
 				<td>
@@ -256,7 +381,8 @@
 					<br />
                     <span class="description">Mark this to generate or regenerate the login dongle disable codes (in case anything goes wrong).</span>
 				</td>
-			</tr>		
+			</tr>
+            <?php } ?>		
 		</table>
         
 <?php 
@@ -276,20 +402,13 @@
 		$gtalk = $_POST['im_login_dongle_gtalk'];
 		$wlm = $_POST['im_login_dongle_wlm'];
 		$icq = $_POST['im_login_dongle_icq'];
-		$gtalk_resend_request = false;
-		$wlm_resend_request = false;
-		$reset_keys = false;
-		
-		if(isset($_POST['im_login_dongle_gtalk_resend'])) {
-			$gtalk_resend_request = true;	
-		}
-		if(isset($_POST['im_login_dongle_regenerate'])) {
-			$reset_keys = true;	
-		}
-		if(isset($_POST['im_login_dongle_wlm_resend'])) {
-			$wlm_resend_request = true;	
-		}
-				
+		$gtalk_resend_request = (isset($_POST['im_login_dongle_gtalk_resend'])) ? true : false;
+		$wlm_resend_request = (isset($_POST['im_login_dongle_wlm_resend'])) ? true : false;
+		$reset_keys = (isset($_POST['im_login_dongle_regenerate'])) ? true : false;
+		$gauth_enable = (isset($_POST['im_login_dongle_gauth_enable'])) ? true : false;
+		$gauth_key = $_POST['im_login_dongle_gauth'];
+		$gauth_regenerate = (isset($_POST['im_login_dongle_gauth_regenerate'])) ? true : false;
+						
 		if(current_user_can('edit_user', $user_id)) {
 			// If regenerate reset keys was marked, generate new reset keys
 			if($reset_keys) {
@@ -323,6 +442,8 @@
 			$dongle_settings['im_accounts']['gtalk']['active'] = (strlen($gtalk) > 0) ? true : false;
 			$dongle_settings['im_accounts']['wlm']['active'] = (strlen($wlm) > 0) ? true : false;
 			$dongle_settings['im_accounts']['icq']['active'] = (strlen($icq) > 0) ? true : false;
+			$dongle_settings['im_accounts']['gauth']['active'] = $gauth_enable;
+			$dongle_settings['im_accounts']['gauth']['key'] = ($gauth_regenerate) ? create_google_authenticator_code() : $gauth_key;
 			
 		}
 			
@@ -346,30 +467,30 @@
 			$msg = html_entity_decode($_POST['custom_msg']);
 			$code_len = $_POST['code_length'];
 			$status = $_POST['dongle_status'];
-			$session_time = $_POST['session_time'];
+			$session_time = (int) ($_POST['session_time']);
 			$msg_show = $_POST['show_message'];
-
-			if(isset($status)) { 
-				$status = true; 
-			} else { 
-				$status = false; 
-			}
+			$mandatory = $_POST['mandatory'];
 			
-			if(isset($msg_show)) {
-				$msg_show = true;	
-			}
-			else {
-				$msg_show = false;	
-			}
+			$is_active = is_any_bot_account_active($plugin_settings);
+
+			$status = (isset($status)) ? true : false;
+			$msg_show = (isset($msg_show)) ? true : false;
 
 			$plugin_settings['code_length'] = (is_int($code_len)) ? $code_len : $plugin_settings['code_length'];
 			$plugin_settings['custom_im_msg'] = $msg;
-			$plugin_settings['plugin_activated'] = $status;
-			$plugin_settings['session_time'] = (is_int($session_time)) ? $session_time : $plugin_settings['session_time'];
+			$plugin_settings['plugin_activated'] = ($is_active) ? $status : false;
+			$plugin_settings['session_time'] = (is_int($session_time) && $session_time > 1) ? $session_time : $plugin_settings['session_time'];
 			$plugin_settings['show_message'] = $msg_show;
+			$plugin_settings['mandatory'] = (isset($mandatory) && $is_active) ? $mandatory : false;
 			
 			update_option('im_login_dongle_settings', $plugin_settings);
 			$message = "General settings were successfully updated.";
+			if(isset($mandatory) && $mandatory && !$is_active) {
+				$message = $message.'<br /><br />You must have at least one IM bot active before you make the IM Login Dongle mandatory.';	
+			}
+			if(isset($status) && $status && !$is_active) {
+				$message = $message.	'<br /><br />You must have at least one IM bot active before you activate the plugin.';	
+			}
 			
 		}
 					
@@ -427,11 +548,20 @@
 						</td>
 					</tr>		
 					<tr>
+						<th scope="row"><label for="mandatory">Mandatory</label></th>
+						<td>
+							<input type="checkbox" name="mandatory" id="mandatory" value="true" <?php if($plugin_settings['mandatory']) { ?>checked="checked"<?php } ?> />
+							<br />
+            				<span class="description">Make IM Login Dongle mandatory. On login, users that don't have an IM configured, will have to enter at least one instant messenger to authorize with.</span>
+						</td>
+					</tr>		
+					<tr>
+					<tr>
 						<th scope="row"><label for="show_message">Powered by message</label></th>
 						<td>
 							<input type="checkbox" name="show_message" id="show_message" value="true" <?php if($plugin_settings['show_message']) { ?>checked="checked"<?php } ?> />
 							<br />
-            				<span class="description">Enable or disable the "Powered by" message. If you decide to check it, thank you for supporting this plugin, if not, please consider a donation.</span>
+            				<span class="description">Enable or disable the "Powered by" message. If you decide to check it, thank you for supporting this plugin, if not, please consider a <a href="http://gum.co/im-login-dongle">donation</a><script type="text/javascript" src="https://gumroad.com/js/gumroad-button.js"></script><script type="text/javascript" src="https://gumroad.com/js/gumroad.js"></script>
 						</td>
 					</tr>		
 					<tr>
@@ -639,10 +769,10 @@
 							<p>This plugin was created by <a href="http://wpplugz.is-leet.com">wpPlugz</a>.</p>
 			                <p>The "Powered by" message in IMs is disabled by default.</p>
                             <p>You can select to show it voluntarily (in the general settings tab by marking "Powered by message"), it would mean a lot to me.</p>
-                            <p>If you decide not to show it, please consider a donation.</p>
-			                <p>This plugin uses the following libraries: <a href="http://code.google.com/p/xmpphp/">XMPPHP</a> <strong>&middot;</strong> <a href="http://wip.asminog.com/projects/icq/WebIcqLite.class.phps">WebICQLite</a></p>
-                            <p>It also uses the following icon sets: <a href="http://www.smashingmagazine.com/2008/08/27/on-stage-a-free-icon-set">On Stage</a> <strong>&middot;</strong> <a href="http://www.iconspedia.com/pack/simply-google-1-37/">Simply Google</a> <strong>&middot;</strong> <a href="http://www.iconfinder.com/icondetails/1413/128/flower_icq_icon">David Vignoni ICQ icon</a></p>
-			                <p>Any bugs, request and reports can be sent on the official plugin page on Wordpress.</p>						
+                            <p>If you decide not to show it, please consider a <a href="http://gum.co/im-login-dongle">donation</a><script type="text/javascript" src="https://gumroad.com/js/gumroad-button.js"></script><script type="text/javascript" src="https://gumroad.com/js/gumroad.js"></script>.</p>
+			                <p>This plugin uses the following libraries: <a href="http://code.google.com/p/xmpphp/">XMPPHP</a> <strong>&middot;</strong> <a href="http://wip.asminog.com/projects/icq/WebIcqLite.class.phps">WebICQLite</a> <strong>&middot;</strong> <a href="http://code.google.com/p/phpmsnclass/">phpmsnclass</a> <strong>&middot;</strong> <a href="http://php.net/manual/pt_BR/function.base-convert.php">Base32 RFC 4648</a></p>
+                            <p>It also uses the following icon sets: <a href="http://www.smashingmagazine.com/2008/08/27/on-stage-a-free-icon-set">On Stage</a> <strong>&middot;</strong> <a href="http://www.iconspedia.com/pack/simply-google-1-37/">Simply Google</a> <strong>&middot;</strong> <a href="http://www.iconfinder.com/icondetails/1413/128/flower_icq_icon">David Vignoni ICQ icon</a> <strong>&middot;</strong> <a href="http://carlosjj.deviantart.com/art/Google-JFK-Icons-ICO-and-PNG-270715545">Google JFK Icons</a></p>
+			                <p>Any bugs, request and reports can be sent on the <a href="http://wordpress.org/extend/plugins/im-login-dongle/">official plugin page</a> on Wordpress.</p>						
                     	</td>
 					</tr>		
 				</table>
@@ -733,6 +863,8 @@
 
 	// The plugin admin page
 	function im_login_dongle_icqbot_settings() {
+
+		$exec_enabled = is_exec_available();
 		
 		$message = "";
 		
@@ -744,20 +876,30 @@
 			$pass = $_POST['icq_pass'];
 			$pass_cmp = $_POST['icq_pass_conf'];
 			$status = $_POST['icq_status'];
+			$shutdown = $_POST['icq_shutdown'];
+
+			if(isset($shutdown)) {
+				require_once('class.ICQBot.php');
+				$icqbot = new ICQBot("", "", true);
+				$icqbot->connect();
+				$icqbot->killBot();
+				$plugin_settings['bot_pid'] = NULL;
+				$message = $message."ICQ bot was successfully terminated. ";
+			}
 
 			if(isset($status)) { 
 				$status = true; 
 			} else { 
 				$status = false; 
 			}
-
+			
 			if(isset($pass) && isset($pass_cmp) && strlen($pass) > 0 && strlen($pass_cmp) > 0) {
 				if(strcmp($pass, $pass_cmp) == 0) {
 					$pass = encrypt($pass, $plugin_settings['encryption_salt']);
 					$plugin_settings['im_bots']['icq']['im_bot_password'] = $pass;
 				}
 				else {
-					$message = "Passwords for ICQ Bot account did not match.";	
+					$message = $message."Passwords for ICQ Bot account did not match. ";	
 				}
 			}
 			
@@ -771,7 +913,7 @@
 			$plugin_settings['im_bots']['icq']['activated'] = $status;
 			
 			update_option('im_login_dongle_settings', $plugin_settings);
-			$message = $message." ICQ Bot settings were successfully saved.";			
+			$message = $message." ICQ Bot settings were successfully saved. ";			
 			
 		}
 
@@ -799,12 +941,16 @@
 					<tr>
 						<th scope="row"><img src="<?php echo plugin_dir_url(__FILE__).'images/icq.png'; ?>" height="96px" width="96px" /></th>
 						<td>
+                        <?php if($exec_enabled) { ?>
 							<p>You can configure your ICQ account here. This account will be used to send out invites and dongle codes to other users.</p>
 			                <p>We recommend you create a separate account on ICQ <a href="http://www.icq.com/join/en">here</a>.</p>
 			                <p>When you've created your account, enter the login data bellow. Mark the dongle status checkbox when your account is registered.</p>
+                        <?php } else { ?>
+                        	<p>To enable the ICQ bot, you must have exec enabled on your server.</p>
+                        <?php } ?>
                     	</td>
 					</tr>
-                    <?php if(is_exec_available()) { ?>		
+                    <?php if($exec_enabled) { ?>		
 					<tr>
 						<th scope="row"><label for="icq_id">Account ID</label></th>
 						<td>
@@ -820,11 +966,21 @@
 							<input name="icq_pass_conf" id="icq_pass_conf" type="password" /><br />
             				<span class="description">Account password.</span>
 						</td>
-					</tr>		
+					</tr>
+                    <?php if(isset($plugin_settings['bot_pid'])) { ?>
+					<tr>
+						<th scope="row"><label for="icq_shutdown">Shutdown bot</label></th>
+						<td>
+							<input type="checkbox" id="icq_shutdown" name="icq_shutdown" value="true" />
+							<br />
+            				<span class="description">The ICQ bot is currently running with PID number <?php echo $plugin_settings['bot_pid']; ?>. Enable this checkbox to shut it down.</span>
+						</td>
+					</tr>
+                    <?php } ?>	
 					<tr>
 						<th scope="row"><label for="icq_status">Dongle status</label></th>
 						<td>
-							<input type="checkbox" id="icq_status" id="icq_status" name="icq_status" value="true" 
+							<input type="checkbox" id="icq_status" name="icq_status" value="true" 
 							<?php if($plugin_settings['im_bots']['icq']['activated']) { ?>checked="checked"<?php } ?> />
 							<br />
             				<span class="description">Enable or disable the selected account.</span>
@@ -945,4 +1101,197 @@
 
 	}
 
+	// The plugin admin page
+	function im_login_dongle_session_manager() {
+		
+		$message = "";
+		
+		$plugin_settings = get_option('im_login_dongle_settings');		
+		
+		$sessions = NULL;
+		
+		if(isset($_GET['action'])) {
+			$action = $_GET['action'];
+			switch($action) {
+				case "one":
+					$user_id = $_GET['id'];
+					$sessions = get_im_login_dongle_sessions($user_id);
+				break;	
+				case "details":
+				break;	
+				case "delete":
+					$user_id = $_GET['user'];
+					$session_id = $_GET['id'];
+					delete_session($user_id, $session_id);
+					$message = $message." Session successfully deleted.";
+					$sessions = get_im_login_dongle_sessions();
+				break;	
+			}
+		}
+		else {
+			$sessions = get_im_login_dongle_sessions();
+		}
+		
+		
+				
+?>
+		<div id="icon-options-general" class="icon32"></div><h2>IM Login Dongle Session Manager</h2>
+<?php
+
+		if(strlen($message) > 0) {
+		
+?>
+
+			<div id="message" class="updated">
+				<p><strong><?php echo $message; ?></strong></p>
+			</div>
+
+<?php
+			
+		}
+
+?>
+
+				<table class="form-table">
+					<tr>
+						<th scope="row"><img src="<?php echo plugin_dir_url(__FILE__).'images/session.png'; ?>" height="96px" width="96px" /></th>
+						<td>
+							<p>You can manage the sessions that are using the IM Login Dongle system here.</p>
+			                <p>You can logout the user or check the session details.</p>
+                    	</td>
+					</tr>		
+				</table>					
+        
+        		<?php if(isset($_GET['action']) && $_GET['action'] == "one") { ?>
+                
+                <p><img src="<?php echo plugin_dir_url(__FILE__).'images/left.png'; ?>" /> <a class="row-title" href="admin.php?page=im-login-dongle-session-manager">Show all sessions</a></p>
+                
+                <?php } ?>
+                
+                <form method="post" action="">
+				<table class="wp-list-table widefat fixed posts" cellspacing="0" style="width: 90%">
+					<thead>
+					<tr>
+						<th scope="col" id="title" class="" style="width: 20%"">
+					    	<span>Username</span><span class="sorting-indicator"></span>
+					    </th>
+					    <th scope="col" id="author" class="" style="width: 20%">
+					    	<span>Login time</span><span class="sorting-indicator"></span>
+						</th>
+					    <th scope="col" id="categories" class="" style="width: 60%">
+							<span>Other data</span><span class="sorting-indicator"></span>
+					    </th>
+				    </tr>
+					</thead>    
+					<tfoot>
+					</tfoot>
+					<tbody id="the-list">
+                       	<?php foreach($sessions as $user => $data) { ?>
+                        <?php foreach($data as $session_id => $data2) { ?>
+						<tr valign="top">
+							<td class="post-title page-title column-title">
+					        	<strong><a class="row-title" href="admin.php?page=im-login-dongle-session-manager&action=one&id=<?php echo $data2['user_id']; ?>" title="<?php echo $user; ?>"><?php echo $user; ?></a></strong>
+								<div class="row-actions">
+									<span class="trash">
+                                    	<a class="submitdelete" title="Delete session" href="admin.php?page=im-login-dongle-session-manager&action=delete&id=<?php echo $session_id; ?>&user=<?php echo $data2['user_id']; ?>">Delete session
+                                        </a>
+                                    </span>
+                            	</div>
+							</td>
+					        <td class="author column-author"><?php echo date("F j, Y H:i:s", $data2['timestamp']); ?><br />
+                            	<div class="row-actions">
+	                            Dongle is <?php $first = ($data2['dongle_used']) ? "<font color=\"#009900\"><strong>used</strong></font>" : "<strong>not used</strong>"; echo $first; ?>
+	                                and user is <?php $first = ($data2['authenticated']) ? "<font color=\"#009900\"><strong>authenticated</strong></font>" : "<strong>not authenticated</strong>"; echo $first; ?>.
+	                            </div>
+                            </td>
+							<td class="categories column-categories"><strong>IP:</strong> <?php echo $data2['ip']; ?><br />
+                            <div class="row-actions">
+                            	<strong>Dongle ID: </strong><?php echo $data2['dongle_id']; ?><br />
+                                <?php 
+								
+									$browser_data = parse_user_agent($data2['browser']);
+								
+								?>
+                            	<strong>Browser: </strong><?php echo $browser_data['browser']; ?>, version: <?php echo $browser_data['version']; ?><br />
+                            	<strong>Operating system: </strong><?php echo $browser_data['platform']; ?><br />
+                            </div>
+                            </td>
+						</tr>
+                        <?php } ?>
+                        <?php } ?>
+					</tbody>
+			</table>
+
+<?php
+
+	}
+	
+	function im_login_dongle_gauth_settings() {
+
+		$message = "";
+		
+		$plugin_settings = get_option('im_login_dongle_settings');
+		
+		if(isset($_POST['gauth-submit'])) {
+		
+			$plugin_settings['im_bots']['gauth']['activated'] = (isset($_POST['gauth_active'])) ? true : false;
+			$plugin_settings['im_bots']['gauth']['seed_length'] = (is_int($_POST['code_length'])) ? $_POST['code_length'] : 32;
+			update_option('im_login_dongle_settings', $plugin_settings);
+			$message = $message." Google Authenticator settings were successfully saved.";
+			
+		}
+		
+?>
+		<div id="icon-options-general" class="icon32"></div><h2>Google Authenticator settings</h2>
+<?php
+
+		if(strlen($message) > 0) {
+		
+?>
+
+			<div id="message" class="updated">
+				<p><strong><?php echo $message; ?></strong></p>
+			</div>
+
+<?php
+			
+		}
+
+?>
+        
+                <form method="post" action="">
+				<table class="form-table">
+					<tr>
+						<th scope="row"><img src="<?php echo plugin_dir_url(__FILE__).'images/gauth.png'; ?>" height="96px" width="96px" /></th>
+						<td>
+							<p>You can configure your Google Authenticator settings here.</p>
+			                <p>Google Authenticator generates random passwords on your mobile phone (you can download the application for Android, Windos Phone or iOS).</p>
+                    	</td>
+					</tr>		
+					<tr>
+						<th scope="row"><label for="code_length">Seed length</label></th>
+						<td>
+							<input name="code_length" id="code_length" type="text" value="<?php echo esc_attr($plugin_settings['im_bots']['gauth']['seed_length']); ?>" />
+							<br />
+            				<span class="description">The length of the seed that is used to generate authentications keys (default is 32).</span>
+						</td>
+					</tr>		
+					<tr>
+						<th scope="row"><label for="wlm_status">Google Authenticator status</label></th>
+						<td>
+							<input type="checkbox" id="gauth_active" name="gauth_active" value="true"
+							<?php if($plugin_settings['im_bots']['gauth']['activated']) { ?>checked="checked"<?php } ?> />
+							<br />
+            				<span class="description">Enable or disable Google Authenticator.</span>
+						</td>
+					</tr>		
+				</table>					
+				<p><input type="submit" name="gauth-submit" class="button-primary" value="<?php esc_attr_e('Update Google Authenticator options') ?>" /></p>
+				</form>
+
+<?php
+
+	}	
+
+		
 ?>
