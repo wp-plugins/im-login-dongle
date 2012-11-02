@@ -4,7 +4,7 @@ Donate link: http://gum.co/im-login-dongle
 Tags: login dongle, login security, two step verification, two step verification, two step im login, instant messenger login, google talk login, extra security, pin login, two step authentication, two factor authentication, google authenticator
 Requires at least: 3.0
 Tested up to: 3.4.1
-Stable tag: 1.0
+Stable tag: 1.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -69,6 +69,7 @@ None at the moment.
 15. ICQ Bot settings page
 16. Reset keys settings page
 17. Data management settings page
+18. Session management settings page
 
 == Changelog ==
 

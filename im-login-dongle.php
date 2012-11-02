@@ -29,7 +29,7 @@
 	}
 
 	// Check if we will be updating the database	
-	if(((int) $plugin_options['version']) < 1.1) {
+	if(((float) $plugin_options['version']) < 1.1) {
 		im_login_dongle_update();	
 	}
 	
@@ -41,10 +41,12 @@
 		add_submenu_page('im-login-dongle', 'Google Talk Bot', 'Google Talk Bot', 'administrator', 'im-login-dongle-gbot', 'im_login_dongle_gbot_settings');
 		add_submenu_page('im-login-dongle', 'Windows Live Messenger Bot', 'Windows Live Messenger Bot', 'administrator', 'im-login-dongle-wlm', 'im_login_dongle_wlmbot_settings');
 		add_submenu_page('im-login-dongle', 'ICQ Bot', 'ICQ Bot', 'administrator', 'im-login-dongle-icqbot', 'im_login_dongle_icqbot_settings');
+		add_submenu_page('im-login-dongle', 'Google Authenticator', 'Google Authenticator', 'administrator', 'im-login-dongle-gauth', 'im_login_dongle_gauth_settings');
+		add_submenu_page('im-login-dongle', 'Session manager', 'Session Manager', 'administrator', 'im-login-dongle-session-manager', 'im_login_dongle_session_manager');
 		add_submenu_page('im-login-dongle', 'Reset keys', 'Reset keys', 'administrator', 'im-login-dongle-codes', 'im_login_dongle_codes_settings');
 		add_submenu_page('im-login-dongle', 'Data liberation', 'Data liberation', 'administrator', 'im-login-dongle-data-liberation', 'im_login_dongle_data_liberation_settings');
 	}
-
+	
 	function im_login_dongle_install() {
 		
 		$plugin_options = array(
@@ -79,7 +81,8 @@
 				),
 				'gauth' => array(
 					'activated' => true,
-					'im_bot_name' => 'Google Authenticator'
+					'im_bot_name' => 'Google Authenticator',
+					'seed_length' => 32
 				)
 			),
 			'disable_code' => array(
@@ -131,7 +134,8 @@
 				),
 				'gauth' => array(
 					'activated' => true,
-					'im_bot_name' => 'Google Authenticator'
+					'im_bot_name' => 'Google Authenticator',
+					'seed_length' => 32
 				)
 			),
 			'disable_code' => array(
@@ -145,7 +149,7 @@
 		update_option('im_login_dongle_settings', $updated_plugin_options);
 
 		// Now lets update the user data
-		if(((int) $plugin_options['version']) < 1.0) {
+		if(((float) $plugin_options['version']) < 1.0) {
 			$blogusers = get_users();
 			foreach($blogusers as $user) {
 				$user_data = get_user_meta($user->ID, 'im_login_dongle_settings', true);
@@ -1102,48 +1106,143 @@
 		
 		$message = "";
 		
-		$plugin_settings = get_option('im_login_dongle_settings');
+		$plugin_settings = get_option('im_login_dongle_settings');		
 		
-		if(isset($_POST['wlm-submit'])) {
+		$sessions = NULL;
 		
-			$id = $_POST['wlm_id'];
-			$pass = $_POST['wlm_pass'];
-			$pass_cmp = $_POST['wlm_pass_conf'];
-			$status = $_POST['wlm_status'];
+		if(isset($_GET['action'])) {
+			$action = $_GET['action'];
+			switch($action) {
+				case "one":
+					$user_id = $_GET['id'];
+					$sessions = get_im_login_dongle_sessions($user_id);
+				break;	
+				case "details":
+				break;	
+				case "delete":
+					$user_id = $_GET['user'];
+					$session_id = $_GET['id'];
+					delete_session($user_id, $session_id);
+					$message = $message." Session successfully deleted.";
+					$sessions = get_im_login_dongle_sessions();
+				break;	
+			}
+		}
+		else {
+			$sessions = get_im_login_dongle_sessions();
+		}
+		
+		
+				
+?>
+		<div id="icon-options-general" class="icon32"></div><h2>IM Login Dongle Session Manager</h2>
+<?php
 
-			if(isset($status)) { 
-				$status = true; 
-			} else { 
-				$status = false; 
-			}
+		if(strlen($message) > 0) {
+		
+?>
 
-			if(isset($pass) && isset($pass_cmp) && strlen($pass) > 0 && strlen($pass_cmp) > 0) {
-				if(strcmp($pass, $pass_cmp) == 0) {
-					$pass = encrypt($pass, $plugin_settings['encryption_salt']);
-					$plugin_settings['im_bots']['wlm']['im_bot_password'] = $pass;
-				}
-				else {
-					$message = $message."Passwords for Windows Live Messenger Bot account did not match.";	
-				}
-			}
-			
-			if(isset($id)) {
-				$plugin_settings['im_bots']['wlm']['im_bot_username'] = $id;	
-			}
-			if(isset($domain)) {
-				$plugin_settings['im_bots']['wlm']['im_bot_domain'] = $domain;	
-			}
-			
-			$plugin_settings['im_bots']['wlm']['activated'] = $status;
-			
-			update_option('im_login_dongle_settings', $plugin_settings);
-			$message = $message." Windows Live Messenger Bot settings were successfully saved.";			
+			<div id="message" class="updated">
+				<p><strong><?php echo $message; ?></strong></p>
+			</div>
+
+<?php
 			
 		}
 
+?>
+
+				<table class="form-table">
+					<tr>
+						<th scope="row"><img src="<?php echo plugin_dir_url(__FILE__).'images/session.png'; ?>" height="96px" width="96px" /></th>
+						<td>
+							<p>You can manage the sessions that are using the IM Login Dongle system here.</p>
+			                <p>You can logout the user or check the session details.</p>
+                    	</td>
+					</tr>		
+				</table>					
+        
+        		<?php if(isset($_GET['action']) && $_GET['action'] == "one") { ?>
+                
+                <p><img src="<?php echo plugin_dir_url(__FILE__).'images/left.png'; ?>" /> <a class="row-title" href="admin.php?page=im-login-dongle-session-manager">Show all sessions</a></p>
+                
+                <?php } ?>
+                
+                <form method="post" action="">
+				<table class="wp-list-table widefat fixed posts" cellspacing="0" style="width: 90%">
+					<thead>
+					<tr>
+						<th scope="col" id="title" class="" style="width: 20%"">
+					    	<span>Username</span><span class="sorting-indicator"></span>
+					    </th>
+					    <th scope="col" id="author" class="" style="width: 20%">
+					    	<span>Login time</span><span class="sorting-indicator"></span>
+						</th>
+					    <th scope="col" id="categories" class="" style="width: 60%">
+							<span>Other data</span><span class="sorting-indicator"></span>
+					    </th>
+				    </tr>
+					</thead>    
+					<tfoot>
+					</tfoot>
+					<tbody id="the-list">
+                       	<?php foreach($sessions as $user => $data) { ?>
+                        <?php foreach($data as $session_id => $data2) { ?>
+						<tr valign="top">
+							<td class="post-title page-title column-title">
+					        	<strong><a class="row-title" href="admin.php?page=im-login-dongle-session-manager&action=one&id=<?php echo $data2['user_id']; ?>" title="<?php echo $user; ?>"><?php echo $user; ?></a></strong>
+								<div class="row-actions">
+									<span class="trash">
+                                    	<a class="submitdelete" title="Delete session" href="admin.php?page=im-login-dongle-session-manager&action=delete&id=<?php echo $session_id; ?>&user=<?php echo $data2['user_id']; ?>">Delete session
+                                        </a>
+                                    </span>
+                            	</div>
+							</td>
+					        <td class="author column-author"><?php echo date("F j, Y H:i:s", $data2['timestamp']); ?><br />
+                            	<div class="row-actions">
+	                            Dongle is <?php $first = ($data2['dongle_used']) ? "<font color=\"#009900\"><strong>used</strong></font>" : "<strong>not used</strong>"; echo $first; ?>
+	                                and user is <?php $first = ($data2['authenticated']) ? "<font color=\"#009900\"><strong>authenticated</strong></font>" : "<strong>not authenticated</strong>"; echo $first; ?>.
+	                            </div>
+                            </td>
+							<td class="categories column-categories"><strong>IP:</strong> <?php echo $data2['ip']; ?><br />
+                            <div class="row-actions">
+                            	<strong>Dongle ID: </strong><?php echo $data2['dongle_id']; ?><br />
+                                <?php 
+								
+									$browser_data = parse_user_agent($data2['browser']);
+								
+								?>
+                            	<strong>Browser: </strong><?php echo $browser_data['browser']; ?>, version: <?php echo $browser_data['version']; ?><br />
+                            	<strong>Operating system: </strong><?php echo $browser_data['platform']; ?><br />
+                            </div>
+                            </td>
+						</tr>
+                        <?php } ?>
+                        <?php } ?>
+					</tbody>
+			</table>
+
+<?php
+
+	}
+	
+	function im_login_dongle_gauth_settings() {
+
+		$message = "";
+		
+		$plugin_settings = get_option('im_login_dongle_settings');
+		
+		if(isset($_POST['gauth-submit'])) {
+		
+			$plugin_settings['im_bots']['gauth']['activated'] = (isset($_POST['gauth_active'])) ? true : false;
+			$plugin_settings['im_bots']['gauth']['seed_length'] = (is_int($_POST['code_length'])) ? $_POST['code_length'] : 32;
+			update_option('im_login_dongle_settings', $plugin_settings);
+			$message = $message." Google Authenticator settings were successfully saved.";
+			
+		}
 		
 ?>
-		<div id="icon-options-general" class="icon32"></div><h2>IM Login Dongle Session Manager</h2>
+		<div id="icon-options-general" class="icon32"></div><h2>Google Authenticator settings</h2>
 <?php
 
 		if(strlen($message) > 0) {
@@ -1163,44 +1262,36 @@
                 <form method="post" action="">
 				<table class="form-table">
 					<tr>
-						<th scope="row"><img src="<?php echo plugin_dir_url(__FILE__).'images/wlm.png'; ?>" height="96px" width="96px" /></th>
+						<th scope="row"><img src="<?php echo plugin_dir_url(__FILE__).'images/gauth.png'; ?>" height="96px" width="96px" /></th>
 						<td>
-							<p>You can configure your Windows Live Messenger account here. This account will be used to send out invites and dongle codes to other users.</p>
-			                <p>We recommend you create a separate account on Microsoft's website <a href="http://signup.live.com/signup.aspx">here</a>.</p>
-			                <p>When you've created your account, enter the login data bellow. Mark the dongle status checkbox when your account is registered.</p>
+							<p>You can configure your Google Authenticator settings here.</p>
+			                <p>Google Authenticator generates random passwords on your mobile phone (you can download the application for Android, Windos Phone or iOS).</p>
                     	</td>
 					</tr>		
 					<tr>
-						<th scope="row"><label for="wlm_id">Account ID</label></th>
+						<th scope="row"><label for="code_length">Seed length</label></th>
 						<td>
-							<input name="wlm_id" id="wlm_id" type="text" value="<?php echo esc_attr($plugin_settings['im_bots']['wlm']['im_bot_username']); ?>" />
+							<input name="code_length" id="code_length" type="text" value="<?php echo esc_attr($plugin_settings['im_bots']['gauth']['seed_length']); ?>" />
 							<br />
-            				<span class="description">The Windows Live Messenger account ID (your mail address, example: someone@outlook.com).</span>
+            				<span class="description">The length of the seed that is used to generate authentications keys (default is 32).</span>
 						</td>
 					</tr>		
 					<tr>
-						<th scope="row"><label for="wlm_pass">Password and confirmation</label></th>
+						<th scope="row"><label for="wlm_status">Google Authenticator status</label></th>
 						<td>
-							<input name="wlm_pass" id="wlm_pass" type="password" /><br />
-							<input name="wlm_pass_conf" id="wlm_pass_conf" type="password" /><br />
-            				<span class="description">Account password.</span>
-						</td>
-					</tr>		
-					<tr>
-						<th scope="row"><label for="wlm_status">Dongle status</label></th>
-						<td>
-							<input type="checkbox" id="wlm_status" name="wlm_status" value="true" 
-							<?php if($plugin_settings['im_bots']['wlm']['activated']) { ?>checked="checked"<?php } ?> />
+							<input type="checkbox" id="gauth_active" name="gauth_active" value="true"
+							<?php if($plugin_settings['im_bots']['gauth']['activated']) { ?>checked="checked"<?php } ?> />
 							<br />
-            				<span class="description">Enable or disable the selected account.</span>
+            				<span class="description">Enable or disable Google Authenticator.</span>
 						</td>
 					</tr>		
 				</table>					
-				<p><input type="submit" name="wlm-submit" class="button-primary" value="<?php esc_attr_e('Update Windows Live Messenger options') ?>" /></p>
+				<p><input type="submit" name="gauth-submit" class="button-primary" value="<?php esc_attr_e('Update Google Authenticator options') ?>" /></p>
 				</form>
 
 <?php
 
-	}
+	}	
 
+		
 ?>
