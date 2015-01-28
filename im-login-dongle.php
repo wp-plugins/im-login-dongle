@@ -2,18 +2,22 @@
 
 	/* 
 		Plugin Name: IM Login Dongle
-		Plugin URI: http://wpplugz.is-leet.com
+		Plugin URI: http://bostjan.gets-it.net
 		Description: A simple plugin that adds two step verification via selected instant messenger.
-		Version: 1.1
+		Version: 1.2.1
 		Author: Bostjan Cigan
 		Author URI: http://bostjan.gets-it.net
 		License: GPL v2
 	*/
 	
 	include_once('functions.php');
-	require_once('class.GoogleTalkBot.php');
-	require_once('class.WLMBot.php');
-	
+	if(!class_exists('GoogleTalkBot')) {
+		require_once('class.GoogleTalkBot.php');
+	}
+	if(!class_exists('WLMBot')) {
+		require_once('class.WLMBot.php');
+	}
+		
 	// First we register all the functions, actions, hooks ...
 	register_activation_hook(__FILE__, 'im_login_dongle_install');
 	add_action('auth_redirect', 'check_dongle_login'); // Actions for checking if user is logged in
@@ -21,17 +25,19 @@
 	
 	// If the plugin is activated in the plugin settings and any bot account is active, show the profile fields for editing
 	$plugin_options = get_option('im_login_dongle_settings');
-	if($plugin_options['plugin_activated'] && is_any_bot_account_active($plugin_options)) {
-		add_action('show_user_profile', 'im_login_dongle_edit_fields'); // Add actions for editing the Google Talk ID in users profile
-		add_action('edit_user_profile', 'im_login_dongle_edit_fields');
-		add_action('personal_options_update', 'im_login_dongle_profile_fields'); // Show the fields in users profile
-		add_action('edit_user_profile_update', 'im_login_dongle_profile_fields');
+	if($plugin_options != false) {
+		if($plugin_options['plugin_activated'] && is_any_bot_account_active($plugin_options)) {
+			add_action('show_user_profile', 'im_login_dongle_edit_fields'); // Add actions for editing the Google Talk ID in users profile
+			add_action('edit_user_profile', 'im_login_dongle_edit_fields');
+			add_action('personal_options_update', 'im_login_dongle_profile_fields'); // Show the fields in users profile
+			add_action('edit_user_profile_update', 'im_login_dongle_profile_fields');
+		}
+		// Check if we will be updating the database	
+		if(((float) $plugin_options['version']) < 1.2) {
+			im_login_dongle_update();	
+		}
 	}
 
-	// Check if we will be updating the database	
-	if(((float) $plugin_options['version']) < 1.1) {
-		im_login_dongle_update();	
-	}
 	
 	add_action('admin_menu', 'im_dongle_login_menu_create'); // Register the administration menu
 
@@ -50,8 +56,8 @@
 	function im_login_dongle_install() {
 		
 		$plugin_options = array(
-			'custom_im_msg' => '',
-			'version' => '1.1', // Plugin version
+			'custom_im_msg' => "",
+			'version' => '1.2', // Plugin version
 			'plugin_activated' => false, // Is plugin activated?
 			'encryption_salt' => random_string(60), // The encryption salt string
 			'code_length' => 6, // How long is the dongle code that is sent
@@ -61,22 +67,22 @@
 			'bot_pid' => NULL,
 			'im_bots' => array( // Because of future versions, a multiple array
 				'gtalk' => array(
-					'im_bot_username' => '',
-					'im_bot_domain' => '',
+					'im_bot_username' => "",
+					'im_bot_domain' => "",
 					'activated' => false,
-					'im_bot_password' => '',
+					'im_bot_password' => "",
 					'im_bot_name' => 'Google Talk'
 				),
 				'icq' => array(
-					'im_bot_username' => '',
+					'im_bot_username' => "",
 					'activated' => false,
-					'im_bot_password' => '',
+					'im_bot_password' => "",
 					'im_bot_name' => 'ICQ'
 				),
 				'wlm' => array(
-					'im_bot_username' => '',
+					'im_bot_username' => "",
 					'activated' => false,
-					'im_bot_password' => '',
+					'im_bot_password' => "",
 					'im_bot_name' => 'Windows Live Messenger'
 				),
 				'gauth' => array(
@@ -91,7 +97,7 @@
 				'code3' => random_string(15),
 				'code4' => random_string(15)
 			)
-		);		
+		);
 
 		add_option('im_login_dongle_settings', $plugin_options);
 		
@@ -104,7 +110,7 @@
 		$plugin_options = get_option('im_login_dongle_settings');
 		$updated_plugin_options = array(
 			'custom_im_msg' => $plugin_options['custom_im_msg'],
-			'version' => '1.1', // Plugin version
+			'version' => '1.2', // Plugin version
 			'plugin_activated' => $plugin_options['plugin_activated'], // Is plugin activated?
 			'encryption_salt' => $plugin_options['encryption_salt'], // The encryption salt string
 			'code_length' => $plugin_options['code_length'], // How long is the dongle code that is sent
@@ -133,10 +139,15 @@
 					'im_bot_name' => 'Windows Live Messenger'
 				),
 				'gauth' => array(
-					'activated' => true,
+					'activated' => (isset($plugin_options['im_bots']['gauth']['activated'])) ? $plugin_options['im_bots']['gauth']['activated'] : false,
 					'im_bot_name' => 'Google Authenticator',
-					'seed_length' => 32
+					'seed_length' => (isset($plugin_options['im_bots']['gauth']['seed_length'])) ? $plugin_options['im_bots']['gauth']['seed_length'] : 32
 				)
+				/*'authy' => array(
+					'activated' => (isset($plugin_options['im_bots']['authy']['activated'])) ? $plugin_options['im_bots']['authy']['activated'] : false,
+					'api_key' => (isset($plugin_options['im_bots']['authy']['api_key'])) ? $plugin_options['im_bots']['authy']['api_key'] : '',
+					'im_bot_name' => 'Authy'
+				)*/
 			),
 			'disable_code' => array(
 				'code1' => $plugin_options['disable_code']['code1'],
@@ -194,7 +205,7 @@
 		$plugin_options = get_option('im_login_dongle_settings');
 		$user_dongle_settings = get_user_meta($current_user->ID, 'im_login_dongle_settings', true);
 
-		$dongle_status = $user_dongle_settings['im_login_dongle_state'];
+		$dongle_status = isset($user_dongle_settings['im_login_dongle_state']) ? $user_dongle_settings['im_login_dongle_state'] : false;
 		
 		// If none of the bot accounts is active, or plugin deactivated or user has the dongle disabled and dongle is not mandatory, login successfull
 		if(!$plugin_options['plugin_activated'] || !is_any_bot_account_active($plugin_options) || (!$dongle_status && !$plugin_options['mandatory'])) {
@@ -235,6 +246,7 @@
 			$dongle_settings = array();
 		}	
 		$options = get_option('im_login_dongle_settings');
+		
 ?>
 		<h3>IM Login Dongle</h3>
 		<table class="form-table">
@@ -244,7 +256,7 @@
 
 				<td>
 <?php
-		if(is_array($dongle_settings)) {
+		if(is_array($dongle_settings) && isset($dongle_settings['im_login_dongle_state'])) {
 			if($dongle_settings['im_login_dongle_state']) {
 				
 ?>
@@ -291,7 +303,7 @@
 				<th scope="row"><label for="im_login_dongle_gauth">Google Authenticator</label></th>
 				<td>
 					<?php
-						$gauth_key = $dongle_settings['im_accounts']['gauth']['key'];
+						$gauth_key = isset($dongle_settings['im_accounts']['gauth']['key']) ? $dongle_settings['im_accounts']['gauth']['key'] : "";
 						$gauth_key = (strlen($gauth_key) > 0) ? $gauth_key : create_google_authenticator_code();
 						$blog_title = get_bloginfo('name');
 						$url_encoded = urlencode("otpauth://totp/{$blog_title}?secret={$gauth_key}");
@@ -314,7 +326,7 @@
 			<tr>
 				<th scope="row"><label for="im_login_dongle_gauth_enable">Enable Google Authenticator</label></th>
 				<td>
-					<input name="im_login_dongle_gauth_enable" id="im_login_gauth_enable" type="checkbox" <?php if($dongle_settings['im_accounts']['gauth']['active']) { ?> checked="checked" <?php } ?>/>
+					<input name="im_login_dongle_gauth_enable" id="im_login_gauth_enable" type="checkbox" <?php if(isset($dongle_settings['im_accounts']['gauth']['active'])) { if($dongle_settings['im_accounts']['gauth']['active']) { ?> checked="checked" <?php } } ?>/>
 					<br />
                     <span class="description">If you want to enable Google Authenticator, check this box.</span>
 				</td>
@@ -420,7 +432,7 @@
 			// If the user required to resend the Google Talk friend request or user changed their IM account
 			if($gtalk_resend_request || (strcmp($gtalk, $dongle_settings['im_accounts']['gtalk']['id']) != 0 && strlen($gtalk) > 0)) {
 				$gbot = new GoogleTalkBot($im_dongle_settings['im_bots']['gtalk']['im_bot_username'], 
-											decrypt($im_dongle_settings['im_bots']['gtalk']['im_bot_password'], $im_dongle_settings['encryption_salt']),
+											decrypt_im_login_dongle($im_dongle_settings['im_bots']['gtalk']['im_bot_password'], $im_dongle_settings['encryption_salt']),
 											$im_dongle_settings['im_bots']['gtalk']['im_bot_domain']);
 				$gbot->connect();
 				$invite_sent = $gbot->sendInvite($gtalk);
@@ -430,7 +442,7 @@
 			// If the user required to resend the WLM friend request or user changed their IM account
 			if($wlm_resend_request || (strcmp($wlm, $dongle_settings['im_accounts']['wlm']['id']) != 0 && strlen($wlm) > 0)) {
 				$wlmbot = new WLMBot($im_dongle_settings['im_bots']['wlm']['im_bot_username'], 
-									decrypt($im_dongle_settings['im_bots']['wlm']['im_bot_password'], $im_dongle_settings['encryption_salt']));
+									decrypt_im_login_dongle($im_dongle_settings['im_bots']['wlm']['im_bot_password'], $im_dongle_settings['encryption_salt']));
 				$wlmbot->connect();
 				$wlmbot->addContact($wlm);
 			}
@@ -447,8 +459,8 @@
 			
 		}
 			
-		$dongle_enabled = $_POST['im_login_dongle_enabled'];
-		$dongle_settings['im_login_dongle_state'] = (isset($dongle_enabled) && (isset($wlm) || isset($gtalk) || isset($icq))) ? true : false;
+		$dongle_enabled = isset($_POST['im_login_dongle_enabled']) ? true : false;
+		$dongle_settings['im_login_dongle_state'] = ($dongle_enabled && (isset($wlm) || isset($gtalk) || isset($icq) || isset($gauth_enable))) ? true : false;
 
 		update_user_meta($user_id, 'im_login_dongle_settings', $dongle_settings);
 		
@@ -468,8 +480,8 @@
 			$code_len = $_POST['code_length'];
 			$status = $_POST['dongle_status'];
 			$session_time = (int) ($_POST['session_time']);
-			$msg_show = $_POST['show_message'];
-			$mandatory = $_POST['mandatory'];
+			$msg_show = isset($_POST['show_message']) ? true : false;
+			$mandatory = isset($_POST['mandatory']) ? true : false;
 			
 			$is_active = is_any_bot_account_active($plugin_settings);
 
@@ -526,7 +538,7 @@
 					<tr>
 						<th scope="row"><label for="code_length">Code length</label></th>
 						<td>
-							<input name="code_length" id="code_length" type="text" value="<?php echo esc_attr($plugin_settings['code_length']); ?>" />
+							<input name="code_length" id="code_length" type="text" value="<?php echo $plugin_settings['code_length']; ?>" />
 							<br />
             				<span class="description">The length of the code that will be sent to users.</span>
 						</td>
@@ -603,7 +615,7 @@
 
 			if(isset($pass) && isset($pass_cmp) && strlen($pass) > 0 && strlen($pass_cmp) > 0) {
 				if(strcmp($pass, $pass_cmp) == 0) {
-					$pass = encrypt($pass, $plugin_settings['encryption_salt']);
+					$pass = encrypt_im_login_dongle($pass, $plugin_settings['encryption_salt']);
 					$plugin_settings['im_bots']['gtalk']['im_bot_password'] = $pass;
 				}
 				else {
@@ -895,7 +907,7 @@
 			
 			if(isset($pass) && isset($pass_cmp) && strlen($pass) > 0 && strlen($pass_cmp) > 0) {
 				if(strcmp($pass, $pass_cmp) == 0) {
-					$pass = encrypt($pass, $plugin_settings['encryption_salt']);
+					$pass = encrypt_im_login_dongle($pass, $plugin_settings['encryption_salt']);
 					$plugin_settings['im_bots']['icq']['im_bot_password'] = $pass;
 				}
 				else {
@@ -1017,7 +1029,7 @@
 
 			if(isset($pass) && isset($pass_cmp) && strlen($pass) > 0 && strlen($pass_cmp) > 0) {
 				if(strcmp($pass, $pass_cmp) == 0) {
-					$pass = encrypt($pass, $plugin_settings['encryption_salt']);
+					$pass = encrypt_im_login_dongle($pass, $plugin_settings['encryption_salt']);
 					$plugin_settings['im_bots']['wlm']['im_bot_password'] = $pass;
 				}
 				else {
@@ -1200,8 +1212,8 @@
 							</td>
 					        <td class="author column-author"><?php echo date("F j, Y H:i:s", $data2['timestamp']); ?><br />
                             	<div class="row-actions">
-	                            Dongle is <?php $first = ($data2['dongle_used']) ? "<font color=\"#009900\"><strong>used</strong></font>" : "<strong>not used</strong>"; echo $first; ?>
-	                                and user is <?php $first = ($data2['authenticated']) ? "<font color=\"#009900\"><strong>authenticated</strong></font>" : "<strong>not authenticated</strong>"; echo $first; ?>.
+	                            Dongle is <?php $first = ($data2['dongle_used']) ? "<font color=\"#009900\"><strong>used</strong></font>" : "<font color=\"red\"><strong>not used</strong></font>"; echo $first; ?>
+	                                and user is <?php $first = ($data2['authenticated']) ? "<font color=\"#009900\"><strong>authenticated</strong></font>" : "<font color=\"red\"><strong>not authenticated</strong></font>"; echo $first; ?>.
 	                            </div>
                             </td>
 							<td class="categories column-categories"><strong>IP:</strong> <?php echo $data2['ip']; ?><br />

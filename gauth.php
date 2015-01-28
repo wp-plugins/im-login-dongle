@@ -2,6 +2,7 @@
 
 	$path = dirname(dirname(dirname(dirname(__FILE__))));
 	require_once($path.'/wp-load.php');
+	require_once('lib/googleauth.php');
 	include_once('functions.php');
 
 	if(is_user_logged_in()) {
@@ -28,7 +29,8 @@
 			
 				$cur_data = $dongle_data[$cookie_id];
 				$google_authenticator_key = $user_data['im_accounts']['gauth']['key'];
-				$check_validity = verify_google_authenticator_code($google_authenticator_key, $code);
+				$ga = new GoogleAuth();
+				$check_validity = $ga->checkCode($google_authenticator_key, $code);
 				
 				if($check_validity) {
 					$cur_data['authenticated'] = true;
@@ -54,10 +56,11 @@
 
 			<!DOCTYPE html>
 			<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">  
-			<link rel='stylesheet' id='wp-admin-css' href='<?php echo admin_url('css/wp-admin.css?ver=3.4.2'); ?>' type='text/css' media='all' />
-			<link rel='stylesheet' id='colors-fresh-css'  href='<?php echo admin_url('css/colors-fresh.css?ver=3.4.2');  ?>' type='text/css' media='all' />
-			<head><title>Login authorization</title></head>
-			<body class="login">
+			<link rel='stylesheet' id='wp-admin-css' href='<?php echo admin_url('css/wp-admin.css'); ?>' type='text/css' media='all' />
+			<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+			<link rel='stylesheet' id='colors-fresh-css'  href='<?php echo admin_url('css/colors-fresh.css');  ?>' type='text/css' media='all' />
+			<link rel='stylesheet' id='buttons-css'  href='<?php echo get_site_url().'/wp-includes/css/buttons.min.css'; ?>' type='text/css' media='all' />
+			<body class="login login-action-login wp-core-ui">
 			<div id='login'>
 			<a href="http://wpplugz.is-leet.com"><img src="images/logo.png" style="display: block; overflow: hidden; padding-bottom: 15px; padding-left:30px; align:center;" /></a>
 

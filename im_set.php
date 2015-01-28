@@ -35,7 +35,7 @@
 			
 			if(isset($wlm) && strlen($wlm) > 0) {
 				$wlmbot = new WLMBot($im_dongle_settings['im_bots']['wlm']['im_bot_username'], 
-									decrypt($im_dongle_settings['im_bots']['wlm']['im_bot_password'], $im_dongle_settings['encryption_salt']));
+									decrypt_im_login_dongle($im_dongle_settings['im_bots']['wlm']['im_bot_password'], $im_dongle_settings['encryption_salt']));
 				$wlmbot->connect();
 				$wlmbot->addContact($wlm);
 				$redirect = true;			
@@ -43,7 +43,7 @@
 			
 			if(isset($gtalk) && strlen($gtalk) > 0) {
 				$gbot = new GoogleTalkBot($im_dongle_settings['im_bots']['gtalk']['im_bot_username'], 
-											decrypt($im_dongle_settings['im_bots']['gtalk']['im_bot_password'], $im_dongle_settings['encryption_salt']),
+											decrypt_im_login_dongle($im_dongle_settings['im_bots']['gtalk']['im_bot_password'], $im_dongle_settings['encryption_salt']),
 											$im_dongle_settings['im_bots']['gtalk']['im_bot_domain']);
 				$gbot->connect();
 				$invite_sent = $gbot->sendInvite($gtalk);

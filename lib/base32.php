@@ -1,82 +1,278 @@
 <?php
+/**
+ * class.Base32.php5
+ * Provide Base32 conversion class
+ * 
+ * @author Shannon Wynter {@link http://fremnet.net/contact}
+ * @version 0.2
+ * @copyright Copyright &copy; 2006 Shannon Wynter
+ * @link http://fremnet.net
+ * 
+ * Class to provide base32 encoding/decoding of strings
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * 
+ * ChangeLog
+ * -----------
+ * version 0.2, 2008-08-07, Shannon Wynter {@link http://fremnet.net/contact}
+ *  - Fixed transposition of Y and Z in csRFC3548
+ * version 0.1, 2006-06-22, Shannon Wynter {@link http://fremnet.net/contact}
+ *  - Initial release
+ * 
+ * Notes
+ * -----------
+ * For dealing with humans it's probably best to use csSafe rather then csRFC3548
+ * 
+ */
 
 /**
- * Encode in Base32 based on RFC 4648.
- * Requires 20% more space than base64 
- * Great for case-insensitive filesystems like Windows and URL's  (except for = char which can be excluded using the pad option for urls)
+ * Class Base32
+ * 
+ * PHP5 class to provide Base32 conversion
  *
- * @package default
- * @author Bryan Ruiz
- **/
+ */
 class Base32 {
 
-   private static $map = array(
-        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', //  7
-        'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', // 15
-        'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', // 23
-        'Y', 'Z', '2', '3', '4', '5', '6', '7', // 31
-        '='  // padding char
-    );
-   
-   private static $flippedMap = array(
-        'A'=>'0', 'B'=>'1', 'C'=>'2', 'D'=>'3', 'E'=>'4', 'F'=>'5', 'G'=>'6', 'H'=>'7',
-        'I'=>'8', 'J'=>'9', 'K'=>'10', 'L'=>'11', 'M'=>'12', 'N'=>'13', 'O'=>'14', 'P'=>'15',
-        'Q'=>'16', 'R'=>'17', 'S'=>'18', 'T'=>'19', 'U'=>'20', 'V'=>'21', 'W'=>'22', 'X'=>'23',
-        'Y'=>'24', 'Z'=>'25', '2'=>'26', '3'=>'27', '4'=>'28', '5'=>'29', '6'=>'30', '7'=>'31'
-    );
-   
-    /**
-     *    Use padding false when encoding for urls
-     *
-     * @return base32 encoded string
-     * @author Bryan Ruiz
-     **/
-    public static function encode($input, $padding = true) {
-        if(empty($input)) return "";
-        $input = str_split($input);
-        $binaryString = "";
-        for($i = 0; $i < count($input); $i++) {
-            $binaryString .= str_pad(base_convert(ord($input[$i]), 10, 2), 8, '0', STR_PAD_LEFT);
-        }
-        $fiveBitBinaryArray = str_split($binaryString, 5);
-        $base32 = "";
-        $i=0;
-        while($i < count($fiveBitBinaryArray)) {   
-            $base32 .= self::$map[base_convert(str_pad($fiveBitBinaryArray[$i], 5,'0'), 2, 10)];
-            $i++;
-        }
-        if($padding && ($x = strlen($binaryString) % 40) != 0) {
-            if($x == 8) $base32 .= str_repeat(self::$map[32], 6);
-            else if($x == 16) $base32 .= str_repeat(self::$map[32], 4);
-            else if($x == 24) $base32 .= str_repeat(self::$map[32], 3);
-            else if($x == 32) $base32 .= self::$map[32];
-        }
-        return $base32;
-    }
-   
-    public static function decode($input) {
-        if(empty($input)) return;
-        $paddingCharCount = substr_count($input, self::$map[32]);
-        $allowedValues = array(6,4,3,1,0);
-        if(!in_array($paddingCharCount, $allowedValues)) return false;
-        for($i=0; $i<4; $i++){
-            if($paddingCharCount == $allowedValues[$i] &&
-                substr($input, -($allowedValues[$i])) != str_repeat(self::$map[32], $allowedValues[$i])) return false;
-        }
-        $input = str_replace('=','', $input);
-        $input = str_split($input);
-        $binaryString = "";
-        for($i=0; $i < count($input); $i = $i+8) {
-            $x = "";
-            if(!in_array($input[$i], self::$map)) return false;
-            for($j=0; $j < 8; $j++) {
-                $x .= str_pad(base_convert(@self::$flippedMap[@$input[$i + $j]], 10, 2), 5, '0', STR_PAD_LEFT);
-            }
-            $eightBits = str_split($x, 8);
-            for($z = 0; $z < count($eightBits); $z++) {
-                $binaryString .= ( ($y = chr(base_convert($eightBits[$z], 2, 10))) || ord($y) == 48 ) ? $y:"";
-            }
-        }
-        return $binaryString;
-    }
+	/**
+	 * csRFC3548
+	 * 
+	 * The character set as defined by RFC3548
+	 * @link http://www.ietf.org/rfc/rfc3548.txt
+	 */
+	const csRFC3548 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+	/**
+	 * csSafe
+	 * 
+	 * This character set is designed to be more human friendly
+	 * For example: i, I, L, l and 1 all map to 1
+	 * Also: there is no U - to help prevent offencive output
+	 * @link http://www.crockford.com/wrmg/base32.html
+	 *
+	 */
+	const csSafe = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+	
+	/**
+	 * cs09AV
+	 * 
+	 * This character set follows the example of the hex
+	 * character set and is included to make this class
+	 * compatible with MIME::Base32
+	 * @link http://search.cpan.org/~danpeder/MIME-Base32-1.01/Base32.pm
+	 * 
+	 */
+	const cs09AV = '0123456789ABCDEFGHIJKLMNOPQRSTUV';
+	
+	/**
+	 * _charset
+	 * 
+	 * Internal holder of the current character set.
+	 *
+	 * @access protected
+	 * @var string
+	 */
+	protected $_charset;
+	
+	/**
+	 * Constructor
+	 *
+	 * Call to create a new object.
+	 * 
+	 * @param string $charset (optional) The character set to use
+	 * @see setCharset
+	 */
+	public function __construct($charset = self::csRFC3548) {
+		$this->setCharset($charset);
+	}
+	
+	/**
+	 * str2bin
+	 * 
+	 * Converts any ascii string to a binary string
+	 *
+	 * @param string $str The string you want to convert
+	 * @return string String of 0's and 1's
+	 */
+	public function str2bin($str) {
+		$chrs = unpack('C*', $str);
+		return vsprintf(str_repeat('%08b', count($chrs)), $chrs);
+	}
+	
+	/**
+	 * bin2str
+	 * 
+	 * Converts a binary string to an ascii string
+	 *
+	 * @param string $str The string of 0's and 1's you want to convert
+	 * @return string The ascii output
+	 * @throws Exception
+	 */
+	public function bin2str($str) {
+		if (strlen($str) % 8 > 0)
+			throw new Exception('Length must be divisible by 8');
+		if (!preg_match('/^[01]+$/', $str))
+			throw new Exception('Only 0\'s and 1\'s are permitted');
+
+		preg_match_all('/.{8}/', $str, $chrs);
+		$chrs = array_map('bindec', $chrs[0]);
+		// I'm just being slack here
+		array_unshift($chrs, 'C*');
+		return call_user_func_array('pack', $chrs);
+	}
+	
+	/**
+	 * fromBin
+	 * 
+	 * Converts a correct binary string to base32
+	 *
+	 * @param string $str The string of 0's and 1's you want to convert
+	 * @return string String encoded as base32
+	 * @throws exception
+	 */
+	public function fromBin($str) {
+		if (strlen($str) % 8 > 0)
+			throw new Exception('Length must be divisible by 8');
+		if (!preg_match('/^[01]+$/', $str))
+			throw new Exception('Only 0\'s and 1\'s are permitted');
+
+		// Base32 works on the first 5 bits of a byte, so we insert blanks to pad it out
+		$str = preg_replace('/(.{5})/', '000$1', $str);
+
+		// We need a string divisible by 5
+		$length = strlen($str);
+		$rbits = $length & 7;
+		
+		if ($rbits > 0) {
+			// Excessive bits need to be padded
+			$ebits = substr($str, $length - $rbits);
+			$str = substr($str, 0, $length - $rbits);
+			$str .= "000$ebits".str_repeat('0', 5 - strlen($ebits));
+		}
+
+		preg_match_all('/.{8}/', $str, $chrs);
+		$chrs = array_map(array($this, '_mapcharset'), $chrs[0]);
+		return join('', $chrs);
+	}
+
+	/**
+	 * toBin
+	 * 
+	 * Accepts a base32 string and returns an ascii binary string
+	 *
+	 * @param string $str The base32 string to convert
+	 * @return string Ascii binary string
+	 */
+	public function toBin($str) {
+		if (!preg_match('/^['.$this->_charset.']+$/', $str))
+			throw new Exception('Must match character set');
+
+		// Convert the base32 string back to a binary string
+		$str = join('',array_map(array($this, '_mapbin'), str_split($str)));
+		// Remove the extra 0's we added
+		$str = preg_replace('/000(.{5})/', '$1', $str);
+		// Unpad if nessicary
+		$length = strlen($str);
+		$rbits = $length & 7;
+		if ($rbits > 0) 
+			$str = substr($str, 0, $length - $rbits);
+		
+		return $str;
+	}
+
+	/**
+	 * fromString
+	 * 
+	 * Convert any string to a base32 string
+	 * This should be binary safe...
+	 *
+	 * @param string $str The string to convert
+	 * @return string The converted base32 string
+	 */
+	public function fromString($str) {
+		return $this->fromBin($this->str2bin($str));
+	}
+	
+	/**
+	 * toString
+	 * 
+	 * Convert any base32 string to a normal sctring
+	 * This should be binary safe...
+	 * 
+	 * @param string $str The base32 string to convert
+	 * @return string The normal string
+	 */
+	public function toString($str) {
+		$str = strtoupper($str);
+		
+		// csSave actually has to be able to consider extra characters
+		if ($this->_charset == self::csSafe) {
+			$str = str_replace('O','0',$str);
+			$str = str_replace(array('I','L'),'1',$str);
+		}
+		
+		return $this->bin2str($this->tobin($str));
+	}
+	
+	/**
+	 * _mapcharset
+	 * 
+	 * Used with array_map to map the bits from a binary string
+	 * directly into a base32 character set
+	 *
+	 * @access private
+	 * @param string $str The string of 0's and 1's you want to convert
+	 * @return char Resulting base32 character
+	 */
+	private function _mapcharset($str) {
+		return $this->_charset[bindec($str)];
+	}
+	
+	/**
+	 * _mapbin
+	 * 
+	 * Used with array_map to map the characters from a base32
+	 * character set directly into a binary string
+	 *
+	 * @access private
+	 * @param char $chr The caracter to map
+	 * @return str String of 0's and 1's
+	 */
+	private function _mapbin($chr) {
+		return sprintf('%08b',strpos($this->_charset,$chr));
+	}
+	
+	/**
+	 * setCharset
+	 * 
+	 * Used to set the internal _charset variable
+	 * I've left it so that people can arbirtrarily set their
+	 * own charset
+	 *
+	 * Can be called with:
+	 * * Base32::csRFC3548
+	 * * Base32::csSafe
+	 * * Base32::cs09AV
+	 * 
+	 * @param string $charset The character set you want to use
+	 * @throws Exception
+	 */
+	public function setCharset($charset = self::csRFC3548) {
+		if (strlen($charset) == 32) {
+			$this->_charset = strtoupper($charset);
+		} else {
+			throw new Exception('Length must be exactly 32');
+		}
+	}	
 }

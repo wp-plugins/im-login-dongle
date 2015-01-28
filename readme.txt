@@ -3,14 +3,16 @@ Contributors: ZeroCool51
 Donate link: http://gum.co/im-login-dongle
 Tags: login dongle, login security, two step verification, two step verification, two step im login, instant messenger login, google talk login, extra security, pin login, two step authentication, two factor authentication, google authenticator
 Requires at least: 3.0
-Tested up to: 3.4.1
-Stable tag: 1.1
+Tested up to: 3.5
+Stable tag: 1.2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 A simple plugin that adds two step verification via selected instant messenger.
 
 == Description ==
+
+**THIS PLUGIN IS DEPRECATED AND IS NO LONGER SUPPORTED ON MY END**
 
 This is a simple plugin that adds two step verification to the login. The beauty of it is, that no mobile phones are required, and pretty much anyone has an IM accout nowadays.
 
@@ -73,6 +75,13 @@ None at the moment.
 19. Google Authenticator settings page
 
 == Changelog ==
+
+= 1.2 =
+* [New] Added features to session manager - filter by dongle authentication type, user, time
+* [New] Added [Authy](https://www.authy.com/ "Authy") as an option
+* [Fix] Google Authenticator issue on some installations, wouldn't accept input code
+* [Fix] Fixed a CSS issue for version 3.5 of Wordpress
+* [Fix] Deleted some obsolete code
 
 = 1.1 =
 * [New] Added session manager (logout any user from anywhere)

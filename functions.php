@@ -1,15 +1,20 @@
 <?php
 
-	require_once('class.GoogleTalkBot.php');
-	require_once('class.WLMBot.php');
-	require_once('class.ICQBot.php');
-	require_once('lib/base32.php');
+	if(!class_exists('GoogleTalkBot')) {
+		include_once('class.GoogleTalkBot.php');
+	}
+	if(!class_exists('WLMBot')) {
+		include_once('class.WLMBot.php');
+	}
+	if(!class_exists('ICQBot')) {
+		include_once('class.WLMBot.php');
+	}
 
-	function encrypt($text, $salt) { 
+	function encrypt_im_login_dongle($text, $salt) { 
     	return trim(base64_encode(mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $salt, $text, MCRYPT_MODE_ECB, mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB), MCRYPT_RAND))));
 	} 
 
-	function decrypt($text, $salt) { 
+	function decrypt_im_login_dongle($text, $salt) { 
 	    return trim(mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $salt, base64_decode($text), MCRYPT_MODE_ECB, mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB), MCRYPT_RAND)));
 	}
 	
@@ -102,16 +107,6 @@
 		return false;
 	}
 		
-	function delete_dongle_code($user_id, $dongle_id) {
-	
-		$dongle_data = get_user_meta($user_id, 'im_login_dongle_data', true);
-		if(is_array($dongle_data)) {
-			unset($dongle_data[$dongle_id]);
-			update_user_meta($user_id, 'im_login_dongle_data', $dongle_data);				
-		}
-		
-	}
-	
 	// Check if user has entered any im account
 	function user_has_im_account($user_id) {
 		
@@ -246,39 +241,6 @@
 		return false;
 		
 	}
-
-	/**
-	* Returns string of login options in auth.php
-	*
-	* @param String $secretkey
-	* @param int $code
-	*
-	*/
-	function verify_google_authenticator_code($secretkey, $code) {
-
-		$firstcount = -1;
-		$lastcount  =  1;
-
-		$tm = floor(time() / 30);
-	
-		$secretkey = Base32::decode($secretkey);
-		for ($i=$firstcount; $i<=$lastcount; $i++) {
-			$time=chr(0).chr(0).chr(0).chr(0).pack('N*',$tm+$i);
-			$hm = hash_hmac( 'SHA1', $time, $secretkey, true );
-			$offset = ord(substr($hm,-1)) & 0x0F;
-			$hashpart=substr($hm,$offset,4);
-			$value=unpack("N",$hashpart);
-			$value=$value[1];
-			$value = $value & 0x7FFFFFFF;
-			$value = $value % 1000000;
-			if($value == $code) {
-				return true;
-			}
-		}
-
-		return false;
-
-	}	
 
 	function create_google_authenticator_code() {
 
