@@ -1,6 +1,6 @@
 <?php
 
-	require('lib/WLM/WLM.php');
+	require_once('lib/WLM/WLM.php');
 
 	class WLMBot {
 	

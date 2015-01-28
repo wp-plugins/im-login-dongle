@@ -1,6 +1,6 @@
 <?php
 
-	require('lib/XMPPHP/XMPP.php');
+	require_once('lib/XMPPHP/XMPP.php');
 
 	class GoogleTalkBot {
 	
@@ -17,13 +17,13 @@
 		}
 		
 		public function connect() {
-			$this->connection = new XMPPHP_XMPP('talk.google.com', 5222, $this->username, $this->password, 'xmpphp', $this->domain, $printlog=false, $loglevel=XMPPHP_Log::LEVEL_INFO);	
+			$this->connection = new XMPPHP_XMPP('talk.google.com', 5222, $this->username, $this->password, 'xmpphp', $this->domain, $printlog=true, $loglevel=XMPPHP_Log::LEVEL_INFO);	
 			$this->connection->useEncryption(true);
 			try {
 			    $this->connection->connect();
 			    $this->connection->processUntil('session_start');
 	    		$this->connection->presence();
-				$this->connection_success = true;					
+				$this->connection_success = true;
 			} catch(XMPPHP_Exception $e) {
 				$this->connection_success = false;
 			}			

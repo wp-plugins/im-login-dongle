@@ -3,7 +3,9 @@
 	$path = dirname(dirname(dirname(dirname (__FILE__))));
 	require($path.'/wp-load.php');
 
-	if(is_user_logged_in()) {
+	$settings = get_option('im_login_dongle_settings');
+
+	if(is_user_logged_in() && !$settings['mandatory']) {
 
 		if(isset($_POST['submitted'])) {
 			$code1 = $_POST['code1'];
@@ -15,7 +17,6 @@
 			get_currentuserinfo();
 		
 			$user_dongle_settings = get_user_meta($current_user->ID, 'im_login_dongle_settings', true);
-			var_dump($user_dongle_settings);
 			$reset_keys = $user_dongle_settings['reset_keys'];
 			$redirect_url = home_url('/wp-login.php');
 			
@@ -40,21 +41,22 @@
 
 			<!DOCTYPE html>
 			<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">  
-			<link rel='stylesheet' id='wp-admin-css' href='<?php echo admin_url('css/wp-admin.css?ver=3.4.2'); ?>' type='text/css' media='all' />
-			<link rel='stylesheet' id='colors-fresh-css'  href='<?php echo admin_url('css/colors-fresh.css?ver=3.4.2');  ?>' type='text/css' media='all' />
+			<link rel='stylesheet' id='wp-admin-css' href='<?php echo admin_url('css/wp-admin.css'); ?>' type='text/css' media='all' />
+			<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+			<link rel='stylesheet' id='colors-fresh-css'  href='<?php echo admin_url('css/colors-fresh.css');  ?>' type='text/css' media='all' />
+			<link rel='stylesheet' id='buttons-css'  href='<?php echo get_site_url().'/wp-includes/css/buttons.min.css'; ?>' type='text/css' media='all' />
 			<head><title>IM Login Dongle disable</title></head>
-			<body class="login">
+			<body class="login login-action-login wp-core-ui">
 			<div id='login'>
 			<a href="http://wpplugz.is-leet.com"><img src="images/logo.png" style="display: block; overflow: hidden; padding-bottom: 15px; padding-left:30px; align:center;" /></a>
 
 
 			<form id="login_form" name="loginform"  action="" method="post">
-			<label for="user_login">
 <?php 
 
 			if(isset($_GET['error'])) { 
 ?>
-            There seems to be something wrong with the IM server. Please enter the reset codes that were given to you or <a href="<?php echo plugin_dir_url(__FILE__).'auth.php'; ?>">use another method</a> of authorization.<br /><br />
+            There seems to be something wrong with the IM server. Please enter the reset codes that were given to you or <a href="<?php echo plugin_dir_url(__FILE__).'dongle.php?cancel'; ?>">use another method</a> of authorization.<br /><br />
 <?php 
 			} 
 			else {
@@ -71,7 +73,7 @@
             <label for="code4">Key 4<input class="input" type="text" name="code4" id="code4" /></label><br />
             <input type="hidden" value="submitted" name="submitted" />
 			<p class="submit"><input type="submit" name="submit" tabindex="100" id="wp-submit" class="button-primary" value="Disable" tabindex="100" /></p>
-            <label for='cancel'><a href='<?php echo wp_logout_url(); ?>'>Cancel</a></label><br />
+            <label for='cancel'><a href='<?php echo plugin_dir_url(__FILE__).'dongle.php?logout'; ?>'>Logout</a></label><br />
 			</form>
 			</div>
 			</body>

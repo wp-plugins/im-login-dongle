@@ -1,9 +1,5 @@
 <?php
 
-	$path = dirname(dirname(dirname(dirname(__FILE__))));
-	require_once('functions.php');
-	require_once($path.'/wp-load.php');
-
 	class ICQBot {
 	
 		private $username;
@@ -22,14 +18,14 @@
 				$this->connected = true;	
 			}
 			else {
-				$output = exec(sprintf('php icq_bot.php %s %s > /dev/null 2> /dev/null &', $this->username, $this->password));
+				$output = exec(sprintf('php console_bot.php %s %s > /dev/null 2> /dev/null &', $this->username, $this->password));
 				sleep(5);
 				$this->connected = true;				
 			}
 		}
 		
-		public function sendDataToBot($ar_s) {
-			$data_sent = true;			
+		protected function sendDataToBot($ar_s) {
+			$data_sent = true;		
 			if($this->connected) {
 				if(!($sock = socket_create(AF_INET, SOCK_STREAM, 0))) {
 					$errorcode = socket_last_error();
@@ -76,11 +72,8 @@
 		}
 		
 		public function killBot() {
-			$data = array('kill' => true);
-			$sent = sendDataToBot($data);
-			$options = get_option('im_login_dongle_settings');
-			$options['im_bots']['icq']['pid'] = NULL;
-			update_option('im_login_dongle_settings', $options);
+			$data = serialize(array('kill' => true));
+			$sent = $this->sendDataToBot($data);
 		}
 		
 	}
