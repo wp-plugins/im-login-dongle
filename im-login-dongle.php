@@ -1200,8 +1200,8 @@
 							</td>
 					        <td class="author column-author"><?php echo date("F j, Y H:i:s", $data2['timestamp']); ?><br />
                             	<div class="row-actions">
-	                            Dongle is <?php $first = ($data2['dongle_used']) ? "<font color=\"#009900\"><strong>used</strong></font>" : "<strong>not used</strong>"; echo $first; ?>
-	                                and user is <?php $first = ($data2['authenticated']) ? "<font color=\"#009900\"><strong>authenticated</strong></font>" : "<strong>not authenticated</strong>"; echo $first; ?>.
+	                            Dongle is <?php $first = ($data2['dongle_used']) ? "<font color=\"#009900\"><strong>used</strong></font>" : "<font color=\"red\"><strong>not used</strong></font>"; echo $first; ?>
+	                                and user is <?php $first = ($data2['authenticated']) ? "<font color=\"#009900\"><strong>authenticated</strong></font>" : "<font color=\"red\"><strong>not authenticated</strong></font>"; echo $first; ?>.
 	                            </div>
                             </td>
 							<td class="categories column-categories"><strong>IP:</strong> <?php echo $data2['ip']; ?><br />
